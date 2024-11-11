@@ -7,21 +7,21 @@ use objc2_metal::{MTLCreateSystemDefaultDevice};
 pub struct MacMemoryUsage;
 
 impl MacMemoryUsage {
-    pub fn total_memory() -> u64 {
+    pub fn total_gpu_memory() -> u64 {
         unsafe {
             let process_info: *mut AnyObject = msg_send![class!(NSProcessInfo), processInfo];
             msg_send![process_info, physicalMemory]
         }
     }
 
-    pub fn recommended_max_working_set_size() -> u64 {
+    pub fn max_gpu_memory() -> u64 {
         unsafe {
             let mtl_device = MTLCreateSystemDefaultDevice();
             msg_send![mtl_device, recommendedMaxWorkingSetSize]
         }
     }
 
-    pub fn current_allocated_size() -> u64 {
+    pub fn current_gpu_memory_usage() -> u64 {
         unsafe {
             let mtl_device = MTLCreateSystemDefaultDevice();
             msg_send![mtl_device, currentAllocatedSize]

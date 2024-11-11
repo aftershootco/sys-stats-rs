@@ -4,9 +4,9 @@ mod macos;
 mod windows;
 
 pub trait MemoryUsage {
-    fn total_memory() -> u64;
-    fn recommended_max_working_set_size() -> u64;
-    fn current_allocated_size() -> u64;
+    fn total_gpu_memory() -> u64;
+    fn max_gpu_memory() -> u64;
+    fn current_gpu_memory_usage() -> u64;
     fn has_unified_memory() -> bool;
 }
 
