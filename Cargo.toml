@@ -1,0 +1,9 @@
+[package]
+name = "mem-info"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+objc2 = "0.5.2"
+objc2-metal = {version = "0.2.2", features = ["MTLDevice"]}
+winapi = "0.3.9"
