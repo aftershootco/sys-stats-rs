@@ -11,30 +11,7 @@ impl WindowsMemoryUsage {
         unsafe {
             GlobalMemoryStatusEx(&mut memory_status);
         }
-
-        // println!("dwLength {:?}", memory_status.dwLength);
-        // println!("dwMemoryLoad {:?}", memory_status.dwMemoryLoad);
-        // println!("ullTotalPhys {:?} MB", memory_status.ullTotalPhys / 1024 / 1024);
-        // println!("ullAvailPhys {:?} MB", memory_status.ullAvailPhys / 1024 / 1024);
-        // println!("ullTotalPageFile {:?} MB", memory_status.ullTotalPageFile / 1024 / 1024);
-        // println!("ullAvailPageFile {:?} MB", memory_status.ullAvailPageFile / 1024 / 1024);
-        // println!("ullTotalVirtual {:?} MB", memory_status.ullTotalVirtual / 1024 / 1024);
-        // println!("ullAvailVirtual {:?} MB", memory_status.ullAvailVirtual / 1024 / 1024);
-        //println!("{:?}", memory_status.ullAvailExtendedVirtual);
-
-
         memory_status.ullTotalPhys
-
-    }
-
-    // Get the available gpu memory of the system
-    pub fn max_gpu_memory() -> u64 {
-        let mut memory_status: MEMORYSTATUSEX = unsafe { zeroed() };
-        memory_status.dwLength = std::mem::size_of::<MEMORYSTATUSEX>() as u32;
-        unsafe {
-            GlobalMemoryStatusEx(&mut memory_status);
-        }
-        memory_status.ullAvailPhys
     }
 
     // Get the current allocated gpu memory
@@ -47,7 +24,31 @@ impl WindowsMemoryUsage {
         memory_status.ullTotalPhys - memory_status.ullAvailPhys
     }
 
+    pub fn current_gpu_memory_free() -> u64 {
+        total_gpu_memory() - current_gpu_memory_usage()
+    }
+
     pub fn has_unified_memory() -> bool {
         false
+    }
+
+    pub fn total_cpu_memory() -> Result<u64, Box<dyn std::error::Error>> {
+        let mem_info = sys_info::mem_info()?;
+        Ok(mem_info.total * 1024) // Convert from KB to bytes
+    }
+
+    pub fn current_cpu_memory_usage() -> Result<u64, Box<dyn std::error::Error>>  {
+        let mem_info = sys_info::mem_info()?;
+        Ok((mem_info.total - mem_info.avail) * 1024) // Convert from KB to bytes
+    }
+
+    pub fn current_cpu_memory_free() -> Result<u64, Box<dyn std::error::Error>>  {
+        let mem_info = sys_info::mem_info()?;
+        Ok((mem_info.free) * 1024) // Convert from KB to bytes
+    }
+
+    pub fn current_cpu_memory_swap() -> Result<(u64, u64), Box<dyn std::error::Error>>  {
+        let mem_info = sys_info::mem_info()?;
+        Ok((mem_info.swap_total * 1024, mem_info.swap_free * 1024)) // Convert from KB to bytes
     }
 }
