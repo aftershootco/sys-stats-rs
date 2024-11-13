@@ -4,21 +4,18 @@ use std::ptr;
 use nvml_wrapper::Nvml;
 
 use winapi::shared::dxgi::*;
+use crate::GPUInfo;
 
 pub struct WindowsMemoryUsage;
 
-#[derive(Debug)]
-struct GpuMemInfo {
-    total_video_memory: u64,
-    used_video_memory: u64,
-    free_video_memory: u64,
-}
 
 impl WindowsMemoryUsage {
 
-    fn get_gpu_memory_info() -> Result<GpuMemInfo, String> {
+    fn get_gpu_info() -> Result<GPUInfo, String> {
         
-        let mut result =GpuMemInfo {
+        let mut result =GPUInfo {
+            name: "".to_string(),
+            architecture: "".to_string(),
             total_video_memory: 0,
             used_video_memory: 0,
             free_video_memory: 0,
@@ -35,9 +32,14 @@ impl WindowsMemoryUsage {
             
                 let memory_info = device.memory_info().expect("Failed to get memory info");
 
+                result.name = device.brand()?;
+                result.architecture = device.board_id()?;
                 result.total_video_memory = memory_info.total;
                 result.used_video_memory = memory_info.used;
                 result.free_video_memory = memory_info.free;
+
+                // TODO: check if the system has unified memory
+                result.has_unified_memory = false;
             
             }
             else {
