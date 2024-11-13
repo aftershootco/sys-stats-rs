@@ -13,19 +13,6 @@ pub struct GPUInfo {
     has_unified_memory: bool,
 }
 
-impl GPUInfo {
-    fn new() -> Self {
-        Self {
-            name: String::new(),
-            architecture: String::new(),
-            total_memory: 0,
-            free_memory: 0,
-            used_memory: 0,
-            has_unified_memory: false,
-        }
-    }
-}
-
 pub trait MemoryUsage {
     fn get_gpu_info() -> Result<GPUInfo, String>;
     fn total_gpu_memory() -> u64;
