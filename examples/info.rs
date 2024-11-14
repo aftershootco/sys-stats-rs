@@ -1,11 +1,12 @@
 use mem_info::PlatformMemoryUsage;
 
-
 fn main() {
-    println!("----------------------");
 
-    let gpu_info = PlatformMemoryUsage::get_gpu_info().unwrap();
-    println!("{:#?}", gpu_info);
-
-    println!("----------------------");
+    let gpu_info = PlatformMemoryUsage::get_gpus_list();
+    
+    for gpu in gpu_info.iter(){
+        println!("----------------------");
+        println!("{:#?}", gpu);
+        println!("----------------------");
+    }
 }
