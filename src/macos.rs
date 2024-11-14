@@ -11,7 +11,15 @@ pub struct MacMemoryUsage;
 impl MacMemoryUsage {
 
     pub fn get_gpu_info() -> Result<GPUInfo, String>{
-        let mut result = GPUInfo::new();
+        let mut result: GPUInfo = GPUInfo {
+            name: "".to_string(),
+            architecture: "".to_string(),
+            has_unified_memory: false,
+            total_memory: 0,
+            used_memory: 0,
+            free_memory: 0,
+        };
+        
         unsafe {
             let mtl_device =  {MTLCreateSystemDefaultDevice()};
             let mtl_device = mtl_device.as_ref().unwrap();
@@ -19,7 +27,7 @@ impl MacMemoryUsage {
             result.architecture = mtl_device.architecture().name().to_string();
             result.total_memory = mtl_device.recommendedMaxWorkingSetSize() / 1024 / 1024;
             result.used_memory = (mtl_device.currentAllocatedSize() as u64) / 1024 / 1024;
-            result.free_memory = (result.total_memory - result.used_memory);
+            result.free_memory = result.total_memory - result.used_memory;
             result.has_unified_memory = mtl_device.hasUnifiedMemory();
         }
         Ok(result)
@@ -45,7 +53,7 @@ impl MacMemoryUsage {
 
     pub fn current_gpu_memory_free() -> u64 {
 
-        let mut free_memory = 0;
+        let free_memory;
 
         unsafe {
             let mtl_device =  {MTLCreateSystemDefaultDevice()};
@@ -53,7 +61,7 @@ impl MacMemoryUsage {
 
             let total_memory = mtl_device.recommendedMaxWorkingSetSize() / 1024 / 1024;
             let used_memory = (mtl_device.currentAllocatedSize() as u64) / 1024 / 1024;
-            free_memory = (total_memory - used_memory);
+            free_memory = total_memory - used_memory;
         }
         free_memory
     }

@@ -1,6 +1,8 @@
 use winapi::shared::winerror::FAILED;
 use std::ptr;
 use nvml_wrapper::Nvml;
+use adlx::{gpu::Gpu1, helper::AdlxHelper, interface::Interface};
+use anyhow::Result;
 
 use winapi::shared::dxgi::*;
 use crate::GPUInfo;
@@ -47,14 +49,22 @@ impl WindowsMemoryUsage {
             }
         }
         else if gpu_desc_list.iter().any(|x| x.VendorId == 4098) { // if we have amd gpu
-            // todo: get the correct Data using amd api
-            let desc = gpu_desc_list.iter().find(|x| x.VendorId == 4098).unwrap();
-            result.name = "AMD".to_string();
-            result.architecture = "Radeon".to_string();
-            result.total_memory =(desc.SharedSystemMemory / 1024 / 1024) as u64;
-            result.used_memory = (desc.DedicatedVideoMemory / 1024 / 1024) as u64;
+            // use adlx to get the gpu info
+            let adlx_helper = AdlxHelper::new().unwrap();
+            let gpu = adlx_helper.system().gpus().unwrap().get(0).unwrap();
+            let pms = adlx_helper.system().performance_monitoring_services().unwrap();
+            
+            let gpu1 = Gpu1::from_raw(gpu);
+            result.name = gpu1.name().unwrap().to_string();
+            result.architecture = gpu1.asic_family_type().unwrap().to_string();
+            result.total_memory = gpu1.total_vram();
+            result.used_memory = pms.current_gpu_metrics().unwrap().vram();
             result.free_memory = result.total_memory - result.used_memory;
-            result.has_unified_memory = false;
+            // if its an apu then it has unified memory
+            // 0 = unknown, 1 = integrated, 2 = discrete
+            result.has_unified_memory = gpu1.type_() == 1;
+            
+            
         } else if gpu_desc_list.iter().any(|x| x.VendorId == 32902) {
             // if we have intel gpu
             // todo: get the correct Data using intel api
