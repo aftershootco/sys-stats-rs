@@ -19,7 +19,7 @@ impl MacMemoryUsage {
             used_memory: 0,
             free_memory: 0,
         };
-        
+
         unsafe {
             let mtl_device =  {MTLCreateSystemDefaultDevice()};
             let mtl_device = mtl_device.as_ref().unwrap();
@@ -31,6 +31,12 @@ impl MacMemoryUsage {
             result.has_unified_memory = mtl_device.hasUnifiedMemory();
         }
         Ok(result)
+    }
+    
+    pub fn get_gpus_list() -> Result<Vec<GPUInfo>, String> {
+        let mut results: Vec<GPUInfo> = Vec::new();
+        results.push(MacMemoryUsage::get_gpu_info().unwrap());
+        Ok(results)
     }
 
     pub fn total_gpu_memory() -> u64 {
