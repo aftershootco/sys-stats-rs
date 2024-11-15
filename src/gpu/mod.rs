@@ -1,4 +1,3 @@
-
 #[cfg(target_os = "macos")]
 mod macos;
 #[cfg(target_os = "windows")]
@@ -6,6 +5,7 @@ mod windows;
 
 pub struct GPUUsage;
 
+#[allow(unused_variables)]
 pub trait IGPU {
     fn get_gpu_info() -> Result<GPUData, String>;
 
@@ -15,10 +15,9 @@ pub trait IGPU {
     fn current_gpu_memory_free() -> u64;
 
     fn has_unified_memory() -> bool;
-
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct GPUData {
     name: String,
     architecture: String,
@@ -41,7 +40,14 @@ impl GPUData {
         }
     }
 
-    pub fn new_with_values(name: String, architecture: String, total_memory: u64, free_memory: u64, used_memory: u64, has_unified_memory: bool) -> Self {
+    pub fn new_with_values(
+        name: String,
+        architecture: String,
+        total_memory: u64,
+        free_memory: u64,
+        used_memory: u64,
+        has_unified_memory: bool,
+    ) -> Self {
         Self {
             name,
             architecture,

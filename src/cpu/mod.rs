@@ -1,12 +1,9 @@
-// use crate::CPUInfo;
-
 #[cfg(target_os = "macos")]
 mod macos;
 #[cfg(target_os = "windows")]
 mod windows;
 
 pub struct CPUUsage;
-
 
 #[derive(Debug)]
 pub struct CPUData {
@@ -16,6 +13,7 @@ pub struct CPUData {
     average_cpu_usage: f32,
 }
 
+#[allow(unused_variables)]
 pub trait ICPU {
     fn get_cpu_info() -> Result<CPUData, String>;
     fn num_of_cores() -> u32;

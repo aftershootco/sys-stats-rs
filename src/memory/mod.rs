@@ -1,4 +1,3 @@
-
 #[cfg(target_os = "macos")]
 mod macos;
 #[cfg(target_os = "windows")]
@@ -6,24 +5,7 @@ mod windows;
 
 pub struct MemoryUsage;
 
-#[derive(Debug)]
-pub struct MemoryData {
-    total: u64,
-    free: u64,
-    /// Used memory also includes cpu memory, in unified memory systems
-    used: u64,
-}
-
-impl MemoryData {
-    pub(crate) fn to_bytes(&self) -> MemoryData {
-        MemoryData {
-            total: self.total * 1024,
-            free: self.free * 1024,
-            used: self.used * 1024,
-        }
-    }
-}
-
+#[allow(unused_variables)]
 pub trait IMemory {
     fn get_system_memory_info() -> Result<MemoryData, String>;
 
@@ -36,6 +18,14 @@ pub trait IMemory {
     fn has_unified_memory() -> bool;
 }
 
+#[derive(Debug, Clone)]
+pub struct MemoryData {
+    total: u64,
+    free: u64,
+    /// Used memory also includes cpu memory, in unified memory systems
+    used: u64,
+}
+
 impl MemoryData {
     pub fn new() -> Self {
         Self {
@@ -46,10 +36,6 @@ impl MemoryData {
     }
 
     pub fn new_with_values(total: u64, free: u64, used: u64) -> Self {
-        Self {
-            total,
-            free,
-            used,
-        }
+        Self { total, free, used }
     }
 }

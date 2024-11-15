@@ -1,5 +1,5 @@
 [package]
-name = "mem-info"
+name = "sys-stats"
 version = "0.1.0"
 edition = "2021"
 

@@ -1,2 +1,2 @@
-# mem-info
-Get system and gpu memory information 
+# sys-stats
+Get cpu, gpu and memory stats
