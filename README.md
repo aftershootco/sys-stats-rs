@@ -1,2 +1,2 @@
-# sys-stats
+# sys-stats-rs
 Get cpu, gpu and memory stats
