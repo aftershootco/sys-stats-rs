@@ -15,3 +15,5 @@ anyhow = "1.0.93"
 
 [dependencies]
 sys-info = "0.9.1"
+serde = { version = "1.0.215", features = ["derive"] }
+serde_json = "1.0.133"
