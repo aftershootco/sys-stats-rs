@@ -2,8 +2,8 @@
   {
     "name": "Apple M1",
     "vendor": "Apple Inc.",
-    "model": "M1",
-    "variant": 1,
+    "id": "APL1102-T8103",
+    "variant": 0,
     "year": 2020,
     "cpu": {
       "heterogeneous": true,
@@ -14,26 +14,26 @@
       },
       "p_core_data": {
         "name": "Firestorm",
-        "architecture": "ARMv8.4-A",
+        "architecture": "ARMv8.5-A",
         "frequency": 3200
       },
       "e_core_data": {
         "name": "Icestorm",
-        "architecture": "ARMv8.4-A",
-        "frequency": 1800
+        "architecture": "ARMv8.5-A",
+        "frequency": 2060
       }
     },
     "gpu": {
       "name": "Apple G13G",
       "architecture": "Apple GPU Family 7",
       "num_of_cores": 7,
-      "frequency": 1200,
-      "performance": 2.6
+      "frequency": 1278,
+      "performance": 2.75
     },
     "npu": {
       "name": "NPU",
       "cores": 16,
-      "performance": 11.0
+      "performance": 11
     },
     "power": {
       "max_soc_power": 20,
@@ -46,8 +46,8 @@
   {
     "name": "Apple M1",
     "vendor": "Apple Inc.",
-    "model": "M1",
-    "variant": 2,
+    "id": "APL1102-T8103",
+    "variant": 1,
     "year": 2020,
     "cpu": {
       "heterogeneous": true,
@@ -58,26 +58,26 @@
       },
       "p_core_data": {
         "name": "Firestorm",
-        "architecture": "ARMv8.4-A",
+        "architecture": "ARMv8.5-A",
         "frequency": 3200
       },
       "e_core_data": {
         "name": "Icestorm",
-        "architecture": "ARMv8.4-A",
-        "frequency": 1800
+        "architecture": "ARMv8.5-A",
+        "frequency": 2060
       }
     },
     "gpu": {
-      "name": "Apple GPU",
-      "architecture": "Apple Custom",
+      "name": "Apple G13G",
+      "architecture": "Apple GPU Family 7",
       "num_of_cores": 8,
-      "frequency": 1200,
+      "frequency": 1278,
       "performance": 2.6
     },
     "npu": {
       "name": "NPU",
       "cores": 16,
-      "performance": 11.0
+      "performance": 11
     },
     "power": {
       "max_soc_power": 20,
@@ -85,13 +85,13 @@
       "gpu_power": 10
     },
     "bus_width": 128,
-    "data_rate": 68.3
+    "data_rate": 68.2
   },
   {
     "name": "Apple M1 Pro",
     "vendor": "Apple Inc.",
-    "model": "M1",
-    "variant": 1,
+    "id": "APL1103-T6000",
+    "variant": 0,
     "year": 2020,
     "cpu": {
       "heterogeneous": true,
@@ -102,26 +102,26 @@
       },
       "p_core_data": {
         "name": "Firestorm",
-        "architecture": "ARMv8.4-A",
+        "architecture": "ARMv8.5-A",
         "frequency": 3230
       },
       "e_core_data": {
         "name": "Icestorm",
-        "architecture": "ARMv8.4-A",
+        "architecture": "ARMv8.5-A",
         "frequency": 2060
       }
     },
     "gpu": {
-      "name": "Apple G13G",
+      "name": "Apple G13S",
       "architecture": "Apple GPU Family 7",
       "num_of_cores": 14,
-      "frequency": 1200,
-      "performance": 4.8
+      "frequency": 1296,
+      "performance": 4.58
     },
     "npu": {
       "name": "NPU",
       "cores": 16,
-      "performance": 11.0
+      "performance": 11
     },
     "power": {
       "max_soc_power": 30,
@@ -134,8 +134,8 @@
   {
     "name": "Apple M1 Pro",
     "vendor": "Apple Inc.",
-    "model": "M1",
-    "variant": 2,
+    "id": "APL1103-T6000",
+    "variant": 1,
     "year": 2020,
     "cpu": {
       "heterogeneous": true,
@@ -146,26 +146,26 @@
       },
       "p_core_data": {
         "name": "Firestorm",
-        "architecture": "ARMv8.4-A",
+        "architecture": "ARMv8.5-A",
         "frequency": 3230
       },
       "e_core_data": {
         "name": "Icestorm",
-        "architecture": "ARMv8.4-A",
+        "architecture": "ARMv8.5-A",
         "frequency": 2060
       }
     },
     "gpu": {
-      "name": "Apple G13G",
+      "name": "Apple G13S",
       "architecture": "Apple GPU Family 7",
       "num_of_cores": 16,
-      "frequency": 1200,
-      "performance": 5.2
+      "frequency": 1296,
+      "performance": 5.22
     },
     "npu": {
       "name": "NPU",
       "cores": 16,
-      "performance": 11.0
+      "performance": 11
     },
     "power": {
       "max_soc_power": 30,
@@ -178,9 +178,9 @@
   {
     "name": "Apple M1 Max",
     "vendor": "Apple Inc.",
-    "model": "M1",
-    "variant": 1,
-    "year": 2020,
+    "id": "APL1105-T6001",
+    "variant": 0,
+    "year": 2021,
     "cpu": {
       "heterogeneous": true,
       "num_of_cores": 10,
@@ -190,26 +190,26 @@
       },
       "p_core_data": {
         "name": "Firestorm",
-        "architecture": "ARMv8.4-A",
-        "frequency": 3200
+        "architecture": "ARMv8.5-A",
+        "frequency": 3230
       },
       "e_core_data": {
         "name": "Icestorm",
-        "architecture": "ARMv8.4-A",
+        "architecture": "ARMv8.5-A",
         "frequency": 2060
       }
     },
     "gpu": {
-      "name": "Apple GPU",
-      "architecture": "Apple Custom",
+      "name": "Apple G13C",
+      "architecture": "Apple GPU Family 7",
       "num_of_cores": 24,
-      "frequency": 1200,
-      "performance": 8
+      "frequency": 1296,
+      "performance": 7.83
     },
     "npu": {
       "name": "NPU",
       "cores": 16,
-      "performance": 11.0
+      "performance": 11
     },
     "power": {
       "max_soc_power": 60,
@@ -217,14 +217,14 @@
       "gpu_power": 40
     },
     "bus_width": 512,
-    "data_rate": 4096
+    "data_rate": 409.6
   },
   {
     "name": "Apple M1 Max",
     "vendor": "Apple Inc.",
-    "model": "M1",
-    "variant": 2,
-    "year": 2020,
+    "id": "APL1105-T6001",
+    "variant": 1,
+    "year": 2021,
     "cpu": {
       "heterogeneous": true,
       "num_of_cores": 10,
@@ -234,26 +234,26 @@
       },
       "p_core_data": {
         "name": "Firestorm",
-        "architecture": "ARMv8.4-A",
+        "architecture": "ARMv8.5-A",
         "frequency": 3200
       },
       "e_core_data": {
         "name": "Icestorm",
-        "architecture": "ARMv8.4-A",
+        "architecture": "ARMv8.5-A",
         "frequency": 2060
       }
     },
     "gpu": {
-      "name": "Apple GPU",
-      "architecture": "Apple Custom",
+      "name": "Apple G13C",
+      "architecture": "Apple GPU Family 7",
       "num_of_cores": 32,
-      "frequency": 1200,
-      "performance": 10.4
+      "frequency": 1296,
+      "performance": 10.44
     },
     "npu": {
       "name": "NPU",
       "cores": 16,
-      "performance": 11.0
+      "performance": 11
     },
     "power": {
       "max_soc_power": 60,
@@ -261,14 +261,14 @@
       "gpu_power": 40
     },
     "bus_width": 512,
-    "data_rate": 4096
+    "data_rate": 409.6
   },
   {
-    "name": "Apple M1 Max",
+    "name": "Apple M1 Ultra",
     "vendor": "Apple Inc.",
-    "model": "M1",
-    "variant": 3,
-    "year": 2020,
+    "id": "APL1W06-T6002",
+    "variant": 0,
+    "year": 2021,
     "cpu": {
       "heterogeneous": true,
       "num_of_cores": 20,
@@ -278,41 +278,41 @@
       },
       "p_core_data": {
         "name": "Firestorm",
-        "architecture": "ARMv8.4-A",
-        "frequency": 3200
+        "architecture": "ARMv8.5-A",
+        "frequency": 3230
       },
       "e_core_data": {
         "name": "Icestorm",
-        "architecture": "ARMv8.4-A",
+        "architecture": "ARMv8.5-A",
         "frequency": 2060
       }
     },
     "gpu": {
-      "name": "Apple GPU",
-      "architecture": "Apple Custom",
+      "name": "Apple G13C",
+      "architecture": "Apple GPU Family 7",
       "num_of_cores": 48,
-      "frequency": 1200,
-      "performance": 16
+      "frequency": 1296,
+      "performance": 15.7
     },
     "npu": {
       "name": "NPU",
       "cores": 32,
-      "performance": 22.0
+      "performance": 22
     },
     "power": {
-      "max_soc_power": 60,
-      "cpu_power": 20,
-      "gpu_power": 40
+      "max_soc_power": 120,
+      "cpu_power": 25,
+      "gpu_power": 90
     },
-    "bus_width": 512,
-    "data_rate": 4096
+    "bus_width": 1024,
+    "data_rate": 819.2
   },
   {
-    "name": "Apple M1 Max",
+    "name": "Apple M1 Ultra",
     "vendor": "Apple Inc.",
-    "model": "M1",
-    "variant": 4,
-    "year": 2020,
+    "id": "APL1W06-T6002",
+    "variant": 3,
+    "year": 2021,
     "cpu": {
       "heterogeneous": true,
       "num_of_cores": 20,
@@ -322,12 +322,12 @@
       },
       "p_core_data": {
         "name": "Firestorm",
-        "architecture": "ARMv8.4-A",
-        "frequency": 3200
+        "architecture": "ARMv8.5-A",
+        "frequency": 3230
       },
       "e_core_data": {
         "name": "Icestorm",
-        "architecture": "ARMv8.4-A",
+        "architecture": "ARMv8.5-A",
         "frequency": 2060
       }
     },
@@ -335,196 +335,988 @@
       "name": "Apple GPU",
       "architecture": "Apple Custom",
       "num_of_cores": 64,
-      "frequency": 1200,
-      "performance": 20.8
+      "frequency": 1296,
+      "performance": 21.2
     },
     "npu": {
       "name": "NPU",
       "cores": 32,
-      "performance": 22.0
+      "performance": 22
     },
     "power": {
-      "max_soc_power": 60,
-      "cpu_power": 20,
-      "gpu_power": 40
+      "max_soc_power": 123,
+      "cpu_power": 25,
+      "gpu_power": 90
     },
-    "bus_width": 512,
-    "data_rate": 4096
+    "bus_width": 1024,
+    "data_rate": 819.2
   },
   {
-    "name": "Apple M1 Ultra",
+    "name": "Apple M2",
     "vendor": "Apple Inc.",
-    "model": "M1",
+    "id": "APL1109-T8112",
+    "variant": 0,
+    "year": 2022,
+    "cpu": {
+      "heterogeneous": true,
+      "num_of_cores": 8,
+      "core_config": {
+        "p": 4,
+        "e": 4
+      },
+      "p_core_data": {
+        "name": "Avalanche",
+        "architecture": "ARMv8.6-A",
+        "frequency": 3490
+      },
+      "e_core_data": {
+        "name": "Blizzard",
+        "architecture": "ARMv8.6-A",
+        "frequency": 2420
+      }
+    },
+    "gpu": {
+      "name": "Apple G14G ",
+      "architecture": "Apple GPU Family 8",
+      "num_of_cores": 8,
+      "frequency": 1398,
+      "performance": 2.8
+    },
+    "npu": {
+      "name": "NPU",
+      "cores": 16,
+      "performance": 15.8
+    },
+    "power": {
+      "max_soc_power": 25,
+      "cpu_power": 10,
+      "gpu_power": 15
+    },
+    "bus_width": 128,
+    "data_rate": 102.4
+  },
+  {
+    "name": "Apple M2",
+    "vendor": "Apple Inc.",
+    "id": "APL1109-T8112",
     "variant": 1,
     "year": 2022,
     "cpu": {
       "heterogeneous": true,
-      "num_of_cores": 10,
+      "num_of_cores": 8,
       "core_config": {
-        "p": 8,
-        "e": 2
+        "p": 4,
+        "e": 4
       },
       "p_core_data": {
-        "name": "Firestorm",
-        "architecture": "ARMv8.4-A",
-        "frequency": 3230
+        "name": "Avalanche",
+        "architecture": "ARMv8.6-A",
+        "frequency": 3490
       },
       "e_core_data": {
-        "name": "Icestorm",
-        "architecture": "ARMv8.4-A",
-        "frequency": 2060
+        "name": "Blizzard",
+        "architecture": "ARMv8.6-A",
+        "frequency": 2420
       }
     },
     "gpu": {
-      "name": "Apple GPU",
-      "architecture": "Apple Custom",
-      "num_of_cores": 24,
-      "frequency": 1200,
-      "performance": 8
+      "name": "Apple G14G ",
+      "architecture": "Apple GPU Family 8",
+      "num_of_cores": 9,
+      "frequency": 1398,
+      "performance": 3.24
     },
     "npu": {
       "name": "NPU",
       "cores": 16,
-      "performance": 21.0
+      "performance": 15.8
     },
     "power": {
-      "max_soc_power": 120,
-      "cpu_power": 40,
-      "gpu_power": 80
+      "max_soc_power": 25,
+      "cpu_power": 10,
+      "gpu_power": 15
     },
-    "bus_width": 512,
-    "data_rate": 4096
+    "bus_width": 128,
+    "data_rate": 102.4
   },
   {
-    "name": "Apple M1 Ultra",
+    "name": "Apple M2",
     "vendor": "Apple Inc.",
-    "model": "M1",
+    "id": "APL1109-T8112",
     "variant": 2,
     "year": 2022,
     "cpu": {
       "heterogeneous": true,
-      "num_of_cores": 10,
+      "num_of_cores": 8,
       "core_config": {
-        "p": 8,
-        "e": 2
+        "p": 4,
+        "e": 4
       },
       "p_core_data": {
-        "name": "Firestorm",
-        "architecture": "ARMv8.4-A",
-        "frequency": 3230
+        "name": "Avalanche",
+        "architecture": "ARMv8.6-A",
+        "frequency": 3490
       },
       "e_core_data": {
-        "name": "Icestorm",
-        "architecture": "ARMv8.4-A",
-        "frequency": 2060
+        "name": "Blizzard",
+        "architecture": "ARMv8.6-A",
+        "frequency": 2420
       }
     },
     "gpu": {
-      "name": "Apple GPU",
-      "architecture": "Apple Custom",
-      "num_of_cores": 32,
-      "frequency": 1200,
-      "performance": 10.4
+      "name": "Apple G14G ",
+      "architecture": "Apple GPU Family 8",
+      "num_of_cores": 10,
+      "frequency": 1398,
+      "performance": 3.68
     },
     "npu": {
       "name": "NPU",
       "cores": 16,
-      "performance": 21.0
+      "performance": 15.8
     },
     "power": {
-      "max_soc_power": 120,
-      "cpu_power": 40,
-      "gpu_power": 80
+      "max_soc_power": 25,
+      "cpu_power": 10,
+      "gpu_power": 15
+    },
+    "bus_width": 128,
+    "data_rate": 102.4
+  },
+  {
+    "name": "Apple M2 Pro",
+    "vendor": "Apple Inc.",
+    "id": "APL1113-T6020",
+    "variant": 0,
+    "year": 2022,
+    "cpu": {
+      "heterogeneous": true,
+      "num_of_cores": 10,
+      "core_config": {
+        "p": 6,
+        "e": 4
+      },
+      "p_core_data": {
+        "name": "Avalanche",
+        "architecture": "ARMv8.6-A",
+        "frequency": 3507
+      },
+      "e_core_data": {
+        "name": "Blizzard",
+        "architecture": "ARMv8.6-A",
+        "frequency": 2420
+      }
+    },
+    "gpu": {
+      "name": "Apple G14S",
+      "architecture": "Apple GPU Family 8",
+      "num_of_cores": 16,
+      "frequency": 1398,
+      "performance": 5.76
+    },
+    "npu": {
+      "name": "NPU",
+      "cores": 16,
+      "performance": 15.8
+    },
+    "power": {
+      "max_soc_power": 25,
+      "cpu_power": 10,
+      "gpu_power": 15
+    },
+    "bus_width": 256,
+    "data_rate": 204.8
+  },
+  {
+    "name": "Apple M2 Pro",
+    "vendor": "Apple Inc.",
+    "id": "APL1113-T6020",
+    "variant": 1,
+    "year": 2022,
+    "cpu": {
+      "heterogeneous": true,
+      "num_of_cores": 12,
+      "core_config": {
+        "p": 8,
+        "e": 4
+      },
+      "p_core_data": {
+        "name": "Avalanche",
+        "architecture": "ARMv8.6-A",
+        "frequency": 3507
+      },
+      "e_core_data": {
+        "name": "Blizzard",
+        "architecture": "ARMv8.6-A",
+        "frequency": 2420
+      }
+    },
+    "gpu": {
+      "name": "Apple G14S",
+      "architecture": "Apple GPU Family 8",
+      "num_of_cores": 20,
+      "frequency": 1398,
+      "performance": 6.8
+    },
+    "npu": {
+      "name": "NPU",
+      "cores": 16,
+      "performance": 15.8
+    },
+    "power": {
+      "max_soc_power": 25,
+      "cpu_power": 10,
+      "gpu_power": 15
+    },
+    "bus_width": 256,
+    "data_rate": 204.8
+  },
+  {
+    "name": "Apple M2 Max",
+    "vendor": "Apple Inc.",
+    "id": "APL1111-T6021",
+    "variant": 0,
+    "year": 2023,
+    "cpu": {
+      "heterogeneous": true,
+      "num_of_cores": 12,
+      "core_config": {
+        "p": 8,
+        "e": 4
+      },
+      "p_core_data": {
+        "name": "Avalanche",
+        "architecture": "ARMv8.6-A",
+        "frequency": 3667
+      },
+      "e_core_data": {
+        "name": "Blizzard",
+        "architecture": "ARMv8.6-A",
+        "frequency": 2420
+      }
+    },
+    "gpu": {
+      "name": "Apple G14C",
+      "architecture": "Apple GPU Family 8",
+      "num_of_cores": 30,
+      "frequency": 1398,
+      "performance": 10.8
+    },
+    "npu": {
+      "name": "NPU",
+      "cores": 16,
+      "performance": 15.8
+    },
+    "power": {
+      "max_soc_power": 79,
+      "cpu_power": 25,
+      "gpu_power": 50
     },
     "bus_width": 512,
-    "data_rate": 4096
+    "data_rate": 409.6
   },
   {
-    "name": "Apple M1 Ultra",
+    "name": "Apple M2 Max",
     "vendor": "Apple Inc.",
-    "model": "M1",
-    "variant": 3,
-    "year": 2022,
+    "id": "APL1111-T6021",
+    "variant": 1,
+    "year": 2023,
     "cpu": {
       "heterogeneous": true,
-      "num_of_cores": 20,
+      "num_of_cores": 12,
       "core_config": {
-        "p": 16,
+        "p": 8,
         "e": 4
       },
       "p_core_data": {
-        "name": "Firestorm",
-        "architecture": "ARMv8.4-A",
-        "frequency": 3200
+        "name": "Avalanche",
+        "architecture": "ARMv8.6-A",
+        "frequency": 3667
       },
       "e_core_data": {
-        "name": "Icestorm",
-        "architecture": "ARMv8.4-A",
-        "frequency": 1800
+        "name": "Blizzard",
+        "architecture": "ARMv8.6-A",
+        "frequency": 2420
       }
     },
     "gpu": {
-      "name": "Apple GPU",
-      "architecture": "Apple Custom",
-      "num_of_cores": 48,
-      "frequency": 1200,
-      "performance": 16
+      "name": "Apple G14C",
+      "architecture": "Apple GPU Family 8",
+      "num_of_cores": 38,
+      "frequency": 1398,
+      "performance": 13.6
+    },
+    "npu": {
+      "name": "NPU",
+      "cores": 16,
+      "performance": 15.8
+    },
+    "power": {
+      "max_soc_power": 79,
+      "cpu_power": 25,
+      "gpu_power": 50
+    },
+    "bus_width": 512,
+    "data_rate": 409.6
+  },
+  {
+    "name": "Apple M2 Ultra",
+    "vendor": "Apple Inc.",
+    "id": "APL1W12-T6022",
+    "variant": 0,
+    "year": 2023,
+    "cpu": {
+      "heterogeneous": true,
+      "num_of_cores": 24,
+      "core_config": {
+        "p": 16,
+        "e": 8
+      },
+      "p_core_data": {
+        "name": "Avalanche",
+        "architecture": "ARMv8.6-A",
+        "frequency": 3667
+      },
+      "e_core_data": {
+        "name": "Blizzard",
+        "architecture": "ARMv8.6-A",
+        "frequency": 2420
+      }
+    },
+    "gpu": {
+      "name": "Apple G14C",
+      "architecture": "Apple GPU Family 8",
+      "num_of_cores": 60,
+      "frequency": 1398,
+      "performance": 21.47
     },
     "npu": {
       "name": "NPU",
       "cores": 32,
-      "performance": 22.0
+      "performance": 31.6
     },
     "power": {
-      "max_soc_power": 300,
-      "cpu_power": 120,
-      "gpu_power": 180
+      "max_soc_power": 90,
+      "cpu_power": 30,
+      "gpu_power": 60
     },
     "bus_width": 1024,
-    "data_rate": 8192
+    "data_rate": 819.2
   },
   {
-    "name": "Apple M1 Ultra",
+    "name": "Apple M2 Ultra",
     "vendor": "Apple Inc.",
-    "model": "M1",
-    "variant": 4,
-    "year": 2022,
+    "id": "APL1W12-T6022",
+    "variant": 1,
+    "year": 2023,
     "cpu": {
       "heterogeneous": true,
-      "num_of_cores": 20,
+      "num_of_cores": 24,
       "core_config": {
         "p": 16,
-        "e": 4
+        "e": 8
       },
       "p_core_data": {
-        "name": "Firestorm",
-        "architecture": "ARMv8.4-A",
-        "frequency": 3200
+        "name": "Avalanche",
+        "architecture": "ARMv8.6-A",
+        "frequency": 3667
       },
       "e_core_data": {
-        "name": "Icestorm",
-        "architecture": "ARMv8.4-A",
-        "frequency": 1800
+        "name": "Blizzard",
+        "architecture": "ARMv8.6-A",
+        "frequency": 2420
       }
     },
     "gpu": {
-      "name": "Apple GPU",
-      "architecture": "Apple Custom",
-      "num_of_cores": 64,
-      "frequency": 1200,
-      "performance": 20.8
+      "name": "Apple G14C",
+      "architecture": "Apple GPU Family 8",
+      "num_of_cores": 76,
+      "frequency": 1398,
+      "performance": 27.2
     },
     "npu": {
       "name": "NPU",
       "cores": 32,
-      "performance": 22.0
+      "performance": 31.6
     },
     "power": {
-      "max_soc_power": 300,
-      "cpu_power": 120,
-      "gpu_power": 180
+      "max_soc_power": 90,
+      "cpu_power": 30,
+      "gpu_power": 60
     },
     "bus_width": 1024,
-    "data_rate": 8192
+    "data_rate": 819.2
+  },
+  {
+    "name": "Apple M3",
+    "vendor": "Apple Inc.",
+    "id": "APL1201-T8122",
+    "variant": 0,
+    "year": 2023,
+    "cpu": {
+      "heterogeneous": true,
+      "num_of_cores": 8,
+      "core_config": {
+        "p": 4,
+        "e": 4
+      },
+      "p_core_data": {
+        "name": "Everest",
+        "architecture": "ARMv8.6-A",
+        "frequency": 3600
+      },
+      "e_core_data": {
+        "name": "Sawtooth",
+        "architecture": "ARMv8.6-A",
+        "frequency": 2480
+      }
+    },
+    "gpu": {
+      "name": "Apple G16G",
+      "architecture": "Apple GPU Family 9",
+      "num_of_cores": 8,
+      "frequency": 1380,
+      "performance": 2.76
+    },
+    "npu": {
+      "name": "NPU",
+      "cores": 16,
+      "performance": 18
+    },
+    "power": {
+      "max_soc_power": 20,
+      "cpu_power": 10,
+      "gpu_power": 10
+    },
+    "bus_width": 128,
+    "data_rate": 102.4
+  },
+  {
+    "name": "Apple M3",
+    "vendor": "Apple Inc.",
+    "id": "APL1201-T8122",
+    "variant": 1,
+    "year": 2023,
+    "cpu": {
+      "heterogeneous": true,
+      "num_of_cores": 8,
+      "core_config": {
+        "p": 4,
+        "e": 4
+      },
+      "p_core_data": {
+        "name": "Everest",
+        "architecture": "ARMv8.6-A",
+        "frequency": 3600
+      },
+      "e_core_data": {
+        "name": "Sawtooth",
+        "architecture": "ARMv8.6-A",
+        "frequency": 2480
+      }
+    },
+    "gpu": {
+      "name": "Apple G16G",
+      "architecture": "Apple GPU Family 9",
+      "num_of_cores": 10,
+      "frequency": 1380,
+      "performance": 3.45
+    },
+    "npu": {
+      "name": "NPU",
+      "cores": 16,
+      "performance": 18
+    },
+    "power": {
+      "max_soc_power": 20,
+      "cpu_power": 10,
+      "gpu_power": 10
+    },
+    "bus_width": 128,
+    "data_rate": 102.4
+  },
+  {
+    "name": "Apple M3 Pro",
+    "vendor": "Apple Inc.",
+    "id": "APL1203-T6030",
+    "variant": 0,
+    "year": 2023,
+    "cpu": {
+      "heterogeneous": true,
+      "num_of_cores": 11,
+      "core_config": {
+        "p": 5,
+        "e": 6
+      },
+      "p_core_data": {
+        "name": "Everest",
+        "architecture": "ARMv8.6-A",
+        "frequency": 3600
+      },
+      "e_core_data": {
+        "name": "Sawtooth",
+        "architecture": "ARMv8.6-A",
+        "frequency": 2480
+      }
+    },
+    "gpu": {
+      "name": "Apple G16S",
+      "architecture": "Apple GPU Family 9",
+      "num_of_cores": 14,
+      "frequency": 1380,
+      "performance": 4.83
+    },
+    "npu": {
+      "name": "NPU",
+      "cores": 16,
+      "performance": 18
+    },
+    "power": {
+      "max_soc_power": 27,
+      "cpu_power": 12,
+      "gpu_power": 15
+    },
+    "bus_width": 192,
+    "data_rate": 153.6
+  },
+  {
+    "name": "Apple M3 Pro",
+    "vendor": "Apple Inc.",
+    "id": "APL1203-T6030",
+    "variant": 1,
+    "year": 2023,
+    "cpu": {
+      "heterogeneous": true,
+      "num_of_cores": 12,
+      "core_config": {
+        "p": 6,
+        "e": 6
+      },
+      "p_core_data": {
+        "name": "Everest",
+        "architecture": "ARMv8.6-A",
+        "frequency": 3600
+      },
+      "e_core_data": {
+        "name": "Sawtooth",
+        "architecture": "ARMv8.6-A",
+        "frequency": 2480
+      }
+    },
+    "gpu": {
+      "name": "Apple G16S",
+      "architecture": "Apple GPU Family 9",
+      "num_of_cores": 18,
+      "frequency": 1380,
+      "performance": 6.21
+    },
+    "npu": {
+      "name": "NPU",
+      "cores": 16,
+      "performance": 18
+    },
+    "power": {
+      "max_soc_power": 27,
+      "cpu_power": 12,
+      "gpu_power": 15
+    },
+    "bus_width": 192,
+    "data_rate": 153.6
+  },
+  {
+    "name": "Apple M3 Max",
+    "vendor": "Apple Inc.",
+    "id": "APL1204-T6031",
+    "variant": 0,
+    "year": 2023,
+    "cpu": {
+      "heterogeneous": true,
+      "num_of_cores": 14,
+      "core_config": {
+        "p": 10,
+        "e": 4
+      },
+      "p_core_data": {
+        "name": "Everest",
+        "architecture": "ARMv8.6-A",
+        "frequency": 3600
+      },
+      "e_core_data": {
+        "name": "Sawtooth",
+        "architecture": "ARMv8.6-A",
+        "frequency": 2480
+      }
+    },
+    "gpu": {
+      "name": "Apple G16C",
+      "architecture": "Apple GPU Family 9",
+      "num_of_cores": 30,
+      "frequency": 1380,
+      "performance": 10.35
+    },
+    "npu": {
+      "name": "NPU",
+      "cores": 16,
+      "performance": 18
+    },
+    "power": {
+      "max_soc_power": 27,
+      "cpu_power": 12,
+      "gpu_power": 15
+    },
+    "bus_width": 384,
+    "data_rate": 307.2
+  },
+  {
+    "name": "Apple M3 Max",
+    "vendor": "Apple Inc.",
+    "id": "APL1204-T6034",
+    "variant": 1,
+    "year": 2023,
+    "cpu": {
+      "heterogeneous": true,
+      "num_of_cores": 16,
+      "core_config": {
+        "p": 12,
+        "e": 4
+      },
+      "p_core_data": {
+        "name": "Everest",
+        "architecture": "ARMv8.6-A",
+        "frequency": 3600
+      },
+      "e_core_data": {
+        "name": "Sawtooth",
+        "architecture": "ARMv8.6-A",
+        "frequency": 2480
+      }
+    },
+    "gpu": {
+      "name": "Apple G16C",
+      "architecture": "Apple GPU Family 9",
+      "num_of_cores": 40,
+      "frequency": 1380,
+      "performance": 13.8
+    },
+    "npu": {
+      "name": "NPU",
+      "cores": 16,
+      "performance": 18
+    },
+    "power": {
+      "max_soc_power": 78,
+      "cpu_power": 15,
+      "gpu_power": 63
+    },
+    "bus_width": 512,
+    "data_rate": 409.6
+  },
+  {
+    "name": "Apple M4",
+    "vendor": "Apple Inc.",
+    "id": "APL1206-T8132",
+    "variant": 0,
+    "year": 2024,
+    "cpu": {
+      "heterogeneous": true,
+      "num_of_cores": 9,
+      "core_config": {
+        "p": 3,
+        "e": 6
+      },
+      "p_core_data": {
+        "name": "Everest",
+        "architecture": "ARMv9.2-A",
+        "frequency": 3940
+      },
+      "e_core_data": {
+        "name": "Sawtooth",
+        "architecture": "ARMv9.2-A",
+        "frequency": 2580
+      }
+    },
+    "gpu": {
+      "name": "Apple G16G",
+      "architecture": "Apple GPU Family 9",
+      "num_of_cores": 8,
+      "frequency": 1460,
+      "performance": 3.28
+    },
+    "npu": {
+      "name": "NPU",
+      "cores": 16,
+      "performance": 38
+    },
+    "power": {
+      "max_soc_power": 20,
+      "cpu_power": 10,
+      "gpu_power": 10
+    },
+    "bus_width": 128,
+    "data_rate": 120
+  },
+  {
+    "name": "Apple M4",
+    "vendor": "Apple Inc.",
+    "id": "APL1206-T8132",
+    "variant": 1,
+    "year": 2024,
+    "cpu": {
+      "heterogeneous": true,
+      "num_of_cores": 8,
+      "core_config": {
+        "p": 4,
+        "e": 4
+      },
+      "p_core_data": {
+        "name": "Everest",
+        "architecture": "ARMv9.2-A",
+        "frequency": 3940
+      },
+      "e_core_data": {
+        "name": "Sawtooth",
+        "architecture": "ARMv9.2-A",
+        "frequency": 2580
+      }
+    },
+    "gpu": {
+      "name": "Apple G16G",
+      "architecture": "Apple GPU Family 9",
+      "num_of_cores": 8,
+      "frequency": 1470,
+      "performance": 3.28
+    },
+    "npu": {
+      "name": "NPU",
+      "cores": 16,
+      "performance": 38
+    },
+    "power": {
+      "max_soc_power": 22,
+      "cpu_power": 10,
+      "gpu_power": 12
+    },
+    "bus_width": 128,
+    "data_rate": 120
+  },
+  {
+    "name": "Apple M4",
+    "vendor": "Apple Inc.",
+    "id": "APL1206-T8132",
+    "variant": 2,
+    "year": 2024,
+    "cpu": {
+      "heterogeneous": true,
+      "num_of_cores": 10,
+      "core_config": {
+        "p": 4,
+        "e": 6
+      },
+      "p_core_data": {
+        "name": "Everest",
+        "architecture": "ARMv9.2-A",
+        "frequency": 3940
+      },
+      "e_core_data": {
+        "name": "Sawtooth",
+        "architecture": "ARMv9.2-A",
+        "frequency": 2580
+      }
+    },
+    "gpu": {
+      "name": "Apple G16G",
+      "architecture": "Apple GPU Family 9",
+      "num_of_cores": 10,
+      "frequency": 1470,
+      "performance": 4.1
+    },
+    "npu": {
+      "name": "NPU",
+      "cores": 16,
+      "performance": 38
+    },
+    "power": {
+      "max_soc_power": 22,
+      "cpu_power": 10,
+      "gpu_power": 12
+    },
+    "bus_width": 128,
+    "data_rate": 120
+  },
+  {
+    "name": "Apple M4 Pro",
+    "vendor": "Apple Inc.",
+    "id": "APLxxxx-T6040",
+    "variant": 0,
+    "year": 2024,
+    "cpu": {
+      "heterogeneous": true,
+      "num_of_cores": 12,
+      "core_config": {
+        "p": 8,
+        "e": 4
+      },
+      "p_core_data": {
+        "name": "Everest",
+        "architecture": "ARMv9.2-A",
+        "frequency": 3940
+      },
+      "e_core_data": {
+        "name": "Sawtooth",
+        "architecture": "ARMv9.2-A",
+        "frequency": 2580
+      }
+    },
+    "gpu": {
+      "name": "Apple G16S",
+      "architecture": "Apple GPU Family 9",
+      "num_of_cores": 16,
+      "frequency": 1580,
+      "performance": 6.6
+    },
+    "npu": {
+      "name": "NPU",
+      "cores": 16,
+      "performance": 38
+    },
+    "power": {
+      "max_soc_power": 30,
+      "cpu_power": 10,
+      "gpu_power": 20
+    },
+    "bus_width": 256,
+    "data_rate": 273
+  },
+  {
+    "name": "Apple M4 Pro",
+    "vendor": "Apple Inc.",
+    "id": "APLxxxx-T6040",
+    "variant": 1,
+    "year": 2024,
+    "cpu": {
+      "heterogeneous": true,
+      "num_of_cores": 14,
+      "core_config": {
+        "p": 10,
+        "e": 4
+      },
+      "p_core_data": {
+        "name": "Everest",
+        "architecture": "ARMv9.2-A",
+        "frequency": 3940
+      },
+      "e_core_data": {
+        "name": "Sawtooth",
+        "architecture": "ARMv9.2-A",
+        "frequency": 2580
+      }
+    },
+    "gpu": {
+      "name": "Apple G16S",
+      "architecture": "Apple GPU Family 9",
+      "num_of_cores": 20,
+      "frequency": 1580,
+      "performance": 8.25
+    },
+    "npu": {
+      "name": "NPU",
+      "cores": 16,
+      "performance": 38
+    },
+    "power": {
+      "max_soc_power": 30,
+      "cpu_power": 10,
+      "gpu_power": 20
+    },
+    "bus_width": 256,
+    "data_rate": 273
+  },
+  {
+    "name": "Apple M4 Max",
+    "vendor": "Apple Inc.",
+    "id": "APLxxxx-T6041",
+    "variant": 0,
+    "year": 2024,
+    "cpu": {
+      "heterogeneous": true,
+      "num_of_cores": 14,
+      "core_config": {
+        "p": 10,
+        "e": 4
+      },
+      "p_core_data": {
+        "name": "Everest",
+        "architecture": "ARMv9.2-A",
+        "frequency": 3940
+      },
+      "e_core_data": {
+        "name": "Sawtooth",
+        "architecture": "ARMv9.2-A",
+        "frequency": 2580
+      }
+    },
+    "gpu": {
+      "name": "Apple G16C",
+      "architecture": "Apple GPU Family 9",
+      "num_of_cores": 32,
+      "frequency": 1580,
+      "performance": 13.2
+    },
+    "npu": {
+      "name": "NPU",
+      "cores": 16,
+      "performance": 38
+    },
+    "power": {
+      "max_soc_power": 40,
+      "cpu_power": 10,
+      "gpu_power": 30
+    },
+    "bus_width": 384,
+    "data_rate": 410
+  },
+  {
+    "name": "Apple M4 Max",
+    "vendor": "Apple Inc.",
+    "id": "APLxxxx-T6041",
+    "variant": 1,
+    "year": 2024,
+    "cpu": {
+      "heterogeneous": true,
+      "num_of_cores": 16,
+      "core_config": {
+        "p": 12,
+        "e": 4
+      },
+      "p_core_data": {
+        "name": "Everest",
+        "architecture": "ARMv9.2-A",
+        "frequency": 3940
+      },
+      "e_core_data": {
+        "name": "Sawtooth",
+        "architecture": "ARMv9.2-A",
+        "frequency": 2580
+      }
+    },
+    "gpu": {
+      "name": "Apple G16C",
+      "architecture": "Apple GPU Family 9",
+      "num_of_cores": 40,
+      "frequency": 1580,
+      "performance": 16.5
+    },
+    "npu": {
+      "name": "NPU",
+      "cores": 16,
+      "performance": 38
+    },
+    "power": {
+      "max_soc_power": 50,
+      "cpu_power": 15,
+      "gpu_power": 35
+    },
+    "bus_width": 512,
+    "data_rate": 546
   }
 ]
