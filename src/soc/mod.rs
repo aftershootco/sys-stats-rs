@@ -107,7 +107,7 @@ impl SocDetails {
     pub fn get_soc_info_by_name(name: &str) -> Soc {
         // parse the soc.json file and return the Soc struct
 
-        let s = include_str!("soc.json");
+        let s = include_str!("db/apple/soc.json");
         let soc_details: Result<SocCollection, Error> = serde_json::from_str(s);
 
         match soc_details {

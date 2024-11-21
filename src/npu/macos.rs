@@ -9,6 +9,8 @@ impl NPUUsage {
         })
     }
     fn total_npu_capability() -> f32 {
+        // apple
+
         0.0
     }
     fn current_npu_usage() -> f32 {
