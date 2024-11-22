@@ -1,7 +1,5 @@
-use sys_stats::CPUStats;
-use sys_stats::GPUStats;
-use sys_stats::MemoryStats;
 use sys_stats::SocDetails;
+use sys_stats::{CPUStats, GPUStats, MemoryStats, NPUStats};
 
 fn main() {
     let gpu = GPUStats::get_gpu_info().unwrap();
@@ -22,5 +20,9 @@ fn main() {
     let socs = SocDetails::get_soc_info_by_name("Apple M1");
     println!("----------------------");
     println!("{:#?}", socs);
+    println!("----------------------");
+
+    println!("----------------------");
+    println!("NPU avaliable : {}", NPUStats::is_npu_available());
     println!("----------------------");
 }

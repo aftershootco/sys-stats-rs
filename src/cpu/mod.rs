@@ -7,10 +7,10 @@ pub struct CPUUsage;
 
 #[derive(Debug)]
 pub struct CPUData {
-    name: String,
-    architecture: String,
-    num_of_cores: u32,
-    average_cpu_usage: f32,
+    pub name: String,
+    pub architecture: String,
+    pub num_of_cores: u32,
+    pub average_cpu_usage: f32,
 }
 
 #[allow(unused_variables)]

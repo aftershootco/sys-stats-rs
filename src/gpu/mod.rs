@@ -19,13 +19,13 @@ pub trait IGPU {
 
 #[derive(Debug, Clone)]
 pub struct GPUData {
-    name: String,
-    architecture: String,
-    total_memory: u64,
-    free_memory: u64,
+    pub name: String,
+    pub architecture: String,
+    pub total_memory: u64,
+    pub free_memory: u64,
     /// Used memory also includes cpu memory, in unified memory systems
-    used_memory: u64,
-    has_unified_memory: bool,
+    pub used_memory: u64,
+    pub has_unified_memory: bool,
 }
 
 impl GPUData {

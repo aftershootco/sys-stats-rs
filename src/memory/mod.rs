@@ -20,10 +20,10 @@ pub trait IMemory {
 
 #[derive(Debug, Clone)]
 pub struct MemoryData {
-    total: u64,
-    free: u64,
-    /// Used memory also includes cpu memory, in unified memory systems
-    used: u64,
+    pub total: u64,
+    pub free: u64,
+    /// Used memory also includes gpu memory, in unified memory systems
+    pub used: u64,
 }
 
 impl MemoryData {
