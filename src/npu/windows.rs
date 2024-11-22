@@ -1,6 +1,10 @@
 use crate::npu::{NPUData, NPUUsage};
 
 impl NPUUsage {
+    pub fn is_npu_available() -> bool {
+        false
+    }
+
     fn get_npu_info() -> Result<NPUData, String> {
         Ok(NPUData {
             name: "NPU".to_string(),
@@ -10,8 +14,7 @@ impl NPUUsage {
     }
     fn total_npu_capability() -> f32 {
         // get soc details so we can get the npu capability
-        // check if we are on intel
-        // let platform = get_platform();
+        0.0
     }
     fn current_npu_usage() -> f32 {
         0.0

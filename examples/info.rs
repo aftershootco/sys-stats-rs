@@ -17,12 +17,13 @@ fn main() {
     println!("{:#?}", cpu_stats);
     println!("----------------------");
 
-    let socs = SocDetails::get_soc_info_by_name("Apple M1");
+    let socs = SocDetails::get_current_soc_info();
     println!("----------------------");
     println!("{:#?}", socs);
     println!("----------------------");
 
     println!("----------------------");
     println!("NPU avaliable : {}", NPUStats::is_npu_available());
+    println!("NPU tops at: {} TOPS", NPUStats::total_npu_capability());
     println!("----------------------");
 }

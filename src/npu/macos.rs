@@ -1,4 +1,5 @@
 use crate::npu::{NPUData, NPUUsage};
+use crate::soc::SocDetails;
 use std::process::Command;
 
 impl NPUUsage {
@@ -30,10 +31,17 @@ impl NPUUsage {
         })
     }
     pub fn total_npu_capability() -> f32 {
-        // get id of device
-        // let device_id =
+        // get the soc details
 
-        0.0
+        let output = Command::new("sh")
+            .arg("-c")
+            .arg("sysctl -n machdep.cpu.brand_string")
+            .output()
+            .expect("Failed to execute command");
+
+        let name = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        let soc = SocDetails::get_soc_info_by_name(&name);
+        soc.npu_performance().unwrap()
     }
     pub fn current_npu_usage() -> f32 {
         0.0
