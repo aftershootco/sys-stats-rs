@@ -5,18 +5,6 @@ mod windows;
 
 pub struct GPUUsage;
 
-#[allow(unused_variables)]
-pub trait IGPU {
-    fn get_gpu_info() -> Result<GPUData, String>;
-
-    fn get_gpus_list() -> Result<Vec<GPUData>, String>;
-    fn total_gpu_memory() -> u64;
-    fn current_gpu_memory_usage() -> u64;
-    fn current_gpu_memory_free() -> u64;
-
-    fn has_unified_memory() -> bool;
-}
-
 #[derive(Debug, Clone)]
 pub struct GPUData {
     pub name: String,

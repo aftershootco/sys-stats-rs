@@ -5,19 +5,6 @@ mod windows;
 
 pub struct MemoryUsage;
 
-#[allow(unused_variables)]
-pub trait IMemory {
-    fn get_system_memory_info() -> Result<MemoryData, String>;
-
-    fn total_system_memory() -> u64;
-    fn current_system_memory_usage() -> u64;
-    fn current_system_memory_free() -> u64;
-
-    fn current_system_memory_swap() -> bool;
-
-    fn has_unified_memory() -> bool;
-}
-
 #[derive(Debug, Clone)]
 pub struct MemoryData {
     pub total: u64,

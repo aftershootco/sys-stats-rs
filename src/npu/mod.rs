@@ -15,14 +15,6 @@ pub struct NPUData {
     pub capability: f32, // in TFLOPS
 }
 
-#[allow(unused_variables)]
-pub trait INPU {
-    fn is_npu_available() -> bool;
-    fn get_npu_info() -> Result<NPUData, String>;
-    fn total_npu_capability() -> f32;
-    fn current_npu_usage() -> f32;
-}
-
 impl NPUData {
     pub fn new() -> Self {
         Self {
