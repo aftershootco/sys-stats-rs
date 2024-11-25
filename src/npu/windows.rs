@@ -1,52 +1,64 @@
 use crate::npu::{NPUData, NPUUsage};
-use anyhow::Result;
+use openvino;
+use std::borrow::Cow;
+use std::string::String;
 use winapi::um::sysinfoapi::GetSystemInfo;
 use winapi::um::sysinfoapi::SYSTEM_INFO;
 
-use windows::Win32::Graphics::DXCore::DXCoreAdapterProperty;
-use windows::Win32::Graphics::DXCore::DXCoreCreateAdapterFactory;
-use windows::Win32::Graphics::DXCore::DXCoreHardwareID;
-use windows::Win32::Graphics::DXCore::DriverDescription;
-use windows::Win32::Graphics::DXCore::DriverVersion;
-// use windows::Win32::Graphics::DXCore::HardwareIDParts;
-use windows::Win32::Graphics::DXCore::AcgCompatible;
-use windows::Win32::Graphics::DXCore::ComputePreemptionGranularity;
-use windows::Win32::Graphics::DXCore::DedicatedAdapterMemory;
-use windows::Win32::Graphics::DXCore::DedicatedSystemMemory;
-use windows::Win32::Graphics::DXCore::GraphicsPreemptionGranularity;
-use windows::Win32::Graphics::DXCore::IDXCoreAdapter;
-use windows::Win32::Graphics::DXCore::IDXCoreAdapterFactory;
-use windows::Win32::Graphics::DXCore::IDXCoreAdapterList;
-use windows::Win32::Graphics::DXCore::InstanceLuid;
-use windows::Win32::Graphics::DXCore::KmdModelVersion;
-use windows::Win32::Graphics::DXCore::SharedSystemMemory;
-use windows::Win32::Graphics::DXCore::{
-    HardwareID, IsDetachable, IsHardware, IsIntegrated, DXCORE_ADAPTER_ATTRIBUTE_D3D12_CORE_COMPUTE,
-};
-
 #[derive(Debug, Default)]
-pub struct DXCoreAdapterProperties {
-    pub instance_luid: u64,
-    pub driver_version: u32,
-    pub driver_description: u32,
-    pub hardware_id: DXCoreHardwareID,
-    pub kmd_model_version: u32,
-    pub compute_preemption_granularity: u32,
-    pub graphics_preemption_granularity: u32,
-    pub dedicated_adapter_memory: u64,
-    pub dedicated_system_memory: u64,
-    pub shared_system_memory: u64,
-    pub acg_compatible: bool,
-    pub is_hardware: bool,
-    pub is_integrated: bool,
-    pub is_detachable: bool,
-    // pub hardware_id_parts: [u32; 4],
-    pub is_npu: bool,
+pub struct PropertyKeyInfo {
+    pub supported_properties: String,
+    pub available_devices: String,
+    pub optimal_number_of_infer_requests: String,
+    pub range_for_async_infer_requests: String,
+    pub range_for_streams: String,
+    pub device_full_name: String,
+    pub device_capabilities: String,
+    pub model_name: String,
+    pub optimal_batch_size: String,
+    pub max_batch_size: String,
+    // pub rw_property_key: Option<RwPropertyKeyInfo>,
+    // pub other: Option<Cow<'static, str>>,
 }
 
-impl DXCoreAdapterProperties {
+#[derive(Debug, Default)]
+pub struct RwPropertyKeyInfo {
+    pub cache_dir: Option<String>,
+    pub cache_mode: Option<String>,
+    pub num_streams: Option<u32>,
+    pub affinity: Option<String>,
+    pub inference_num_threads: Option<u32>,
+    pub hint_enable_cpu_pinning: Option<bool>,
+    pub hint_enable_hyper_threading: Option<bool>,
+    pub hint_performance_mode: Option<String>,
+    pub hint_scheduling_core_type: Option<String>,
+    pub hint_inference_precision: Option<String>,
+    pub hint_num_requests: Option<u32>,
+    pub log_level: Option<String>,
+    pub hint_model_priority: Option<String>,
+    pub enable_profiling: Option<bool>,
+    pub device_priorities: Option<String>,
+    pub hint_execution_mode: Option<String>,
+    pub force_tbb_terminate: Option<bool>,
+    pub enable_mmap: Option<bool>,
+    pub auto_batch_timeout: Option<u32>,
+    pub other: Option<Cow<'static, str>>,
+}
+
+impl PropertyKeyInfo {
     pub fn new() -> Self {
-        Self::default()
+        PropertyKeyInfo {
+            supported_properties: String::new(),
+            available_devices: String::new(),
+            optimal_number_of_infer_requests: String::new(),
+            range_for_async_infer_requests: String::new(),
+            range_for_streams: String::new(),
+            device_full_name: String::new(),
+            device_capabilities: String::new(),
+            model_name: String::new(),
+            optimal_batch_size: String::new(),
+            max_batch_size: String::new(),
+        }
     }
 }
 
@@ -56,10 +68,17 @@ impl NPUUsage {
 
         if arch == "x64" {
             if vendor.contains("Intel") {
-                match Self::get_intel_npu_info() {
-                    Ok(npu) => true,
-                    Err(e) => false,
+                let core = openvino::Core::new().unwrap();
+                let all_devices: std::result::IntoIter<Vec<openvino::DeviceType<'_>>> =
+                    core.available_devices().into_iter();
+
+                // if there is an NPU device, return true
+                for dev in all_devices.flatten() {
+                    if dev == openvino::DeviceType::NPU {
+                        return true;
+                    }
                 }
+                false
             } else if vendor.contains("AMD") {
                 // amd
                 false
@@ -81,14 +100,12 @@ impl NPUUsage {
 
         if arch == "x64" {
             if vendor.contains("Intel") {
-                match Self::get_intel_npu_info() {
-                    Ok(npu) => Ok(NPUData {
-                        name: "Intel NPU".to_string(),
-                        usage: 0.0,
-                        capability: 0.0,
-                    }),
-                    Err(e) => Err(e),
-                }
+                let npu_data = Self::get_intel_npu_info();
+                Ok(NPUData {
+                    name: npu_data.device_full_name,
+                    usage: 0.0,
+                    capability: 0.0,
+                })
             } else if vendor.contains("AMD") {
                 // amd
                 Err("AMD NPU not supported".to_string())
@@ -110,15 +127,7 @@ impl NPUUsage {
 
         if arch == "x64" {
             if vendor.contains("Intel") {
-                match Self::get_intel_npu_info() {
-                    Ok(npu) => {
-                        // now we have to get npu tops
-
-                        println!("{:#?}", npu);
-                        return 0.0;
-                    }
-                    Err(e) => eprintln!("{}", e),
-                }
+                return 0.0;
             } else if vendor.contains("AMD") {
                 // amd
             } else {
@@ -168,168 +177,43 @@ impl NPUUsage {
         (arch, vendor.to_string())
     }
 
-    pub fn get_intel_npu_info() -> Result<DXCoreAdapterProperties, String> {
-        let factory: IDXCoreAdapterFactory =
-            unsafe { DXCoreCreateAdapterFactory().map_err(|e| e.message().to_string())? };
+    fn get_intel_npu_info() -> PropertyKeyInfo {
+        let mut result = PropertyKeyInfo::default();
+        let core = openvino::Core::new().unwrap();
+        let dev = openvino::DeviceType::NPU;
 
-        let mut adapter_list: Option<IDXCoreAdapterList> = None;
-        unsafe {
-            adapter_list = factory
-                .CreateAdapterList(&[DXCORE_ADAPTER_ATTRIBUTE_D3D12_CORE_COMPUTE])
-                .map(|list| Some(list))
-                .map_err(|e| e.message().to_string())?;
+        result.supported_properties = core
+            .get_property(&dev, &openvino::PropertyKey::SupportedProperties)
+            .unwrap();
+        result.available_devices = core
+            .get_property(&dev, &openvino::PropertyKey::AvailableDevices)
+            .unwrap();
+        result.optimal_number_of_infer_requests = core
+            .get_property(&dev, &openvino::PropertyKey::OptimalNumberOfInferRequests)
+            .unwrap();
+        result.range_for_async_infer_requests = core
+            .get_property(&dev, &openvino::PropertyKey::RangeForAsyncInferRequests)
+            .unwrap();
+        result.range_for_streams = core
+            .get_property(&dev, &openvino::PropertyKey::RangeForStreams)
+            .unwrap();
+        result.device_full_name = core
+            .get_property(&dev, &openvino::PropertyKey::DeviceFullName)
+            .unwrap();
+        result.device_capabilities = core
+            .get_property(&dev, &openvino::PropertyKey::DeviceCapabilities)
+            .unwrap();
+        result.model_name = core
+            .get_property(&dev, &openvino::PropertyKey::ModelName)
+            .unwrap_or("N/A".to_string());
+        result.optimal_batch_size = core
+            .get_property(&dev, &openvino::PropertyKey::OptimalBatchSize)
+            .unwrap_or("N/A".to_string());
+        result.max_batch_size = core
+            .get_property(&dev, &openvino::PropertyKey::MaxBatchSize)
+            .unwrap_or("N/A".to_string());
+        // Add more properties as needed
 
-            let adapter_list = adapter_list.ok_or("Failed to create DXCore adapter list")?;
-
-            let adapter_count = unsafe { adapter_list.GetAdapterCount() };
-
-            for i in 0..adapter_count {
-                let mut adapter: Option<IDXCoreAdapter> = None;
-                unsafe {
-                    adapter = adapter_list
-                        .GetAdapter(i)
-                        .map(|adapter| Some(adapter))
-                        .map_err(|e| e.message().to_string())?;
-                }
-                let adapter = adapter.ok_or("Failed to get DXCore adapter")?;
-
-                let mut hardware_id: DXCoreHardwareID = DXCoreHardwareID::default();
-                unsafe {
-                    adapter
-                        .GetProperty(
-                            HardwareID,
-                            size_of::<DXCoreHardwareID>(),
-                            &mut hardware_id as *mut _ as *mut _,
-                        )
-                        .map_err(|e| e.message().to_string())?;
-                }
-
-                // Check if the adapter matches the NPU device ID
-                if hardware_id.vendorID == 0x8086 && hardware_id.deviceID == 0x7D1D {
-                    let mut adapter_properties = DXCoreAdapterProperties::new();
-                    adapter_properties.hardware_id = hardware_id;
-
-                    // Retrieve other properties
-                    unsafe {
-                        adapter
-                            .GetProperty(
-                                InstanceLuid,
-                                size_of::<u64>(),
-                                &mut adapter_properties.instance_luid as *mut _ as *mut _,
-                            )
-                            .map_err(|e| e.message().to_string())?;
-
-                        let mut driver_version: DXCoreAdapterProperty = DXCoreAdapterProperty::default();
-
-                        adapter
-                            .GetProperty(
-                                DriverVersion,
-                                size_of::<[u16; 16]>(), &mut driver_version as *mut _ as *mut _)
-                                .map_err(|e| e.message().to_string())?;
-                            adapter_properties.driver_version = driver_version.0;
-
-                        let mut driver_description: DXCoreAdapterProperty = DXCoreAdapterProperty::default();
-                        adapter
-                            .GetProperty(
-                                DriverDescription,
-                                size_of::<[u16; 16]>(),
-                                &mut driver_description as *mut _ as *mut _,
-                            )
-                            .map_err(|e| e.message().to_string())?;
-                        adapter_properties.driver_description = driver_description.0;
-
-                        adapter
-                            .GetProperty(
-                                KmdModelVersion,
-                                size_of::<u32>(),
-                                &mut adapter_properties.kmd_model_version as *mut _ as *mut _,
-                            )
-                            .map_err(|e| e.message().to_string())?;
-
-                        adapter
-                            .GetProperty(
-                                ComputePreemptionGranularity,
-                                size_of::<u32>(),
-                                &mut adapter_properties.compute_preemption_granularity as *mut _
-                                    as *mut _,
-                            )
-                            .map_err(|e| e.message().to_string())?;
-
-                        adapter
-                            .GetProperty(
-                                GraphicsPreemptionGranularity,
-                                size_of::<u32>(),
-                                &mut adapter_properties.graphics_preemption_granularity as *mut _
-                                    as *mut _,
-                            )
-                            .map_err(|e| e.message().to_string())?;
-
-                        adapter
-                            .GetProperty(
-                                DedicatedAdapterMemory,
-                                size_of::<u64>(),
-                                &mut adapter_properties.dedicated_adapter_memory as *mut _
-                                    as *mut _,
-                            )
-                            .map_err(|e| e.message().to_string())?;
-
-                        adapter
-                            .GetProperty(
-                                DedicatedSystemMemory,
-                                size_of::<u64>(),
-                                &mut adapter_properties.dedicated_system_memory as *mut _ as *mut _,
-                            )
-                            .map_err(|e| e.message().to_string())?;
-
-                        adapter
-                            .GetProperty(
-                                SharedSystemMemory,
-                                size_of::<u64>(),
-                                &mut adapter_properties.shared_system_memory as *mut _ as *mut _,
-                            )
-                            .map_err(|e| e.message().to_string())?;
-
-                        adapter
-                            .GetProperty(
-                                AcgCompatible,
-                                size_of::<bool>(),
-                                &mut adapter_properties.acg_compatible as *mut _ as *mut _,
-                            )
-                            .map_err(|e| e.message().to_string())?;
-
-                        adapter
-                            .GetProperty(
-                                IsHardware,
-                                size_of::<bool>(),
-                                &mut adapter_properties.is_hardware as *mut _ as *mut _,
-                            )
-                            .map_err(|e| e.message().to_string())?;
-
-                        adapter
-                            .GetProperty(
-                                IsIntegrated,
-                                size_of::<bool>(),
-                                &mut adapter_properties.is_integrated as *mut _ as *mut _,
-                            )
-                            .map_err(|e| e.message().to_string())?;
-
-                        adapter
-                            .GetProperty(
-                                IsDetachable,
-                                size_of::<bool>(),
-                                &mut adapter_properties.is_detachable as *mut _ as *mut _,
-                            )
-                            .map_err(|e| e.message().to_string())?;
-
-                        // adapter.GetProperty(HardwareIDParts, size_of::<[u32; 4]>(), &mut adapter_properties.hardware_id_parts as *mut _ as *mut _)
-                        //     .map_err(|e| e.message().to_string())?;
-                    }
-
-                    return Ok(adapter_properties);
-                }
-            }
-
-            Err("No Intel NPU found".to_string())
-        }
+        result
     }
 }

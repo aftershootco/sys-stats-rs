@@ -14,7 +14,7 @@ impl MemoryUsage {
         Ok(to_bytes(&MemoryData::new_with_values(
             mem_info.total,
             mem_info.free,
-            (mem_info.total - mem_info.free),
+            mem_info.total - mem_info.free,
         )))
     }
     pub fn total_system_memory() -> Result<u64, Box<dyn std::error::Error>> {

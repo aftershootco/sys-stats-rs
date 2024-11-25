@@ -12,7 +12,8 @@ winapi = { version = "0.3.9", features = ["sysinfoapi", "winerror", "dxgi"] }
 nvml-wrapper = "0.10.0"
 adlx = "0.0.0-alpha.1"
 anyhow = "1.0.93"
-windows = { version = "0.34.0", features = ["Graphics", "Win32_Graphics_DXCore"] }
+windows = "0.34.0"
+openvino = "0.8.0"
 
 [dependencies]
 sys-info = "0.9.1"
