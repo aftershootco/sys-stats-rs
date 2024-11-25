@@ -26,8 +26,7 @@ impl NPUUsage {
     fn get_npu_info() -> Result<NPUData, String> {
         Ok(NPUData {
             name: "NPU".to_string(),
-            capability: 50.0,
-            usage: 0.0,
+            capability: Self::total_npu_capability(),
         })
     }
     pub fn total_npu_capability() -> f32 {
@@ -42,8 +41,5 @@ impl NPUUsage {
         let name = String::from_utf8_lossy(&output.stdout).trim().to_string();
         let soc = SocDetails::get_soc_info_by_name(&name);
         soc.npu_performance().unwrap()
-    }
-    pub fn current_npu_usage() -> f32 {
-        0.0
     }
 }

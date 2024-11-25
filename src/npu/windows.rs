@@ -103,7 +103,6 @@ impl NPUUsage {
                 let npu_data = Self::get_intel_npu_info();
                 Ok(NPUData {
                     name: npu_data.device_full_name,
-                    usage: 0.0,
                     capability: 0.0,
                 })
             } else if vendor.contains("AMD") {
@@ -140,10 +139,6 @@ impl NPUUsage {
         } else {
             eprintln!("Unknown platform");
         }
-        0.0
-    }
-
-    pub fn current_npu_usage() -> f32 {
         0.0
     }
 
