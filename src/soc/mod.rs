@@ -15,7 +15,7 @@ pub struct CoreConfig {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-struct Core {
+pub struct Core {
     name: Option<String>,
     architecture: Option<String>,
     frequency: u32,

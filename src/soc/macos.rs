@@ -4,22 +4,17 @@ use serde_json::Error;
 use std::process::Command;
 
 impl SocDetails {
-   
     pub fn get_current_soc_info() -> Soc {
         // parse the soc.json file and return the Soc struct
 
         let s = include_str!("db/apple/soc.json");
         let soc_details: Result<SocCollection, Error> = serde_json::from_str(s);
-
         let (name, cc) = Self::get_name_and_core_count();
 
         match soc_details {
             Ok(soc) => {
                 for s in &soc.0 {
-                    println!("s: {:#?}", s);
                     if let (Some(s_name), s_cc) = (s.name.as_ref(), s.num_of_cores()) {
-                        // println!("s_name: {}, s_cc: {}", s_name, s_cc);
-                        // println!("name: {}, cc: {}", name, cc);
                         if s_name == &name && s_cc == cc {
                             return s.clone();
                         }
