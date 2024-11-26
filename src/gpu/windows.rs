@@ -168,6 +168,9 @@ impl GPUUsage {
     }
 
     pub fn has_unified_memory() -> bool {
+        if let Ok(gpu_info) = Self::get_gpu_info() {
+            return gpu_info.has_unified_memory;
+        }
         false
     }
 }

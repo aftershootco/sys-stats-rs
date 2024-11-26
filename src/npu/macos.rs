@@ -23,23 +23,15 @@ impl NPUUsage {
         }
     }
 
-    fn get_npu_info() -> Result<NPUData, String> {
+    pub fn get_npu_info() -> Result<NPUData, String> {
         Ok(NPUData {
             name: "NPU".to_string(),
             capability: Self::total_npu_capability(),
         })
     }
     pub fn total_npu_capability() -> f32 {
-        // get the soc details
-
-        let output = Command::new("sh")
-            .arg("-c")
-            .arg("sysctl -n machdep.cpu.brand_string")
-            .output()
-            .expect("Failed to execute command");
-
-        let name = String::from_utf8_lossy(&output.stdout).trim().to_string();
-        let soc = SocDetails::get_soc_info_by_name(&name);
+        // get the soc details and return the NPU performance
+        let soc = SocDetails::get_current_soc_info();
         soc.npu_performance().unwrap()
     }
 }

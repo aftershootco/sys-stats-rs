@@ -1,63 +1,91 @@
 use crate::npu::{NPUData, NPUUsage};
 use openvino;
-use std::borrow::Cow;
 use std::string::String;
 use winapi::um::sysinfoapi::GetSystemInfo;
 use winapi::um::sysinfoapi::SYSTEM_INFO;
 
 #[derive(Debug, Default)]
 pub struct PropertyKeyInfo {
-    pub supported_properties: String,
-    pub available_devices: String,
-    pub optimal_number_of_infer_requests: String,
-    pub range_for_async_infer_requests: String,
+    pub supported_properties: Vec<String>,
+    pub available_devices: u32,
+    pub optimal_number_of_infer_requests: u32,
+    pub range_for_async_infer_requests: (u32, u32),
     pub range_for_streams: String,
     pub device_full_name: String,
-    pub device_capabilities: String,
+    pub device_capabilities: Vec<String>,
     pub model_name: String,
-    pub optimal_batch_size: String,
-    pub max_batch_size: String,
-    // pub rw_property_key: Option<RwPropertyKeyInfo>,
+    pub optimal_batch_size: u32,
+    pub max_batch_size: u32,
+    pub rw_property_key: RwPropertyKeyInfo,
     // pub other: Option<Cow<'static, str>>,
 }
 
 #[derive(Debug, Default)]
 pub struct RwPropertyKeyInfo {
-    pub cache_dir: Option<String>,
-    pub cache_mode: Option<String>,
-    pub num_streams: Option<u32>,
-    pub affinity: Option<String>,
-    pub inference_num_threads: Option<u32>,
-    pub hint_enable_cpu_pinning: Option<bool>,
-    pub hint_enable_hyper_threading: Option<bool>,
-    pub hint_performance_mode: Option<String>,
-    pub hint_scheduling_core_type: Option<String>,
-    pub hint_inference_precision: Option<String>,
-    pub hint_num_requests: Option<u32>,
-    pub log_level: Option<String>,
-    pub hint_model_priority: Option<String>,
-    pub enable_profiling: Option<bool>,
-    pub device_priorities: Option<String>,
-    pub hint_execution_mode: Option<String>,
-    pub force_tbb_terminate: Option<bool>,
-    pub enable_mmap: Option<bool>,
-    pub auto_batch_timeout: Option<u32>,
-    pub other: Option<Cow<'static, str>>,
+    pub cache_dir: String,
+    pub cache_mode: String,
+    pub num_streams: u32,
+    pub affinity: String,
+    pub inference_num_threads: u32,
+    pub hint_enable_cpu_pinning: bool,
+    pub hint_enable_hyper_threading: bool,
+    pub hint_performance_mode: String,
+    pub hint_scheduling_core_type: String,
+    pub hint_inference_precision: String,
+    pub hint_num_requests: u32,
+    pub log_level: String,
+    pub hint_model_priority: String,
+    pub enable_profiling: bool,
+    pub device_priorities: String,
+    pub hint_execution_mode: String,
+    pub force_tbb_terminate: bool,
+    pub enable_mmap: bool,
+    pub auto_batch_timeout: u32,
+    // pub other: Cow<'static, str>,
 }
 
 impl PropertyKeyInfo {
+    #[allow(dead_code)]
     pub fn new() -> Self {
         PropertyKeyInfo {
-            supported_properties: String::new(),
-            available_devices: String::new(),
-            optimal_number_of_infer_requests: String::new(),
-            range_for_async_infer_requests: String::new(),
+            supported_properties: Vec::new(),
+            available_devices: 0,
+            optimal_number_of_infer_requests: 0,
+            range_for_async_infer_requests: (0, 0),
             range_for_streams: String::new(),
             device_full_name: String::new(),
-            device_capabilities: String::new(),
+            device_capabilities: Vec::new(),
             model_name: String::new(),
-            optimal_batch_size: String::new(),
-            max_batch_size: String::new(),
+            optimal_batch_size: 0,
+            max_batch_size: 0,
+            rw_property_key: RwPropertyKeyInfo::default(),
+        }
+    }
+}
+
+impl RwPropertyKeyInfo {
+    pub fn new() -> Self {
+        RwPropertyKeyInfo {
+            cache_dir: String::new(),
+            cache_mode: String::new(),
+            num_streams: 0,
+            affinity: String::new(),
+            inference_num_threads: 0,
+            hint_enable_cpu_pinning: false,
+            hint_enable_hyper_threading: false,
+            hint_performance_mode: String::new(),
+            hint_scheduling_core_type: String::new(),
+            hint_inference_precision: String::new(),
+            hint_num_requests: 0,
+            log_level: String::new(),
+            hint_model_priority: String::new(),
+            enable_profiling: false,
+            device_priorities: String::new(),
+            hint_execution_mode: String::new(),
+            force_tbb_terminate: false,
+            enable_mmap: false,
+            auto_batch_timeout: 0,
+            // other: Cow::Borrowed(""),
         }
     }
 }
@@ -142,6 +170,10 @@ impl NPUUsage {
         0.0
     }
 
+    pub fn current_npu_usage() -> f32 {
+        0.0
+    }
+
     fn get_platform_details() -> (String, String) {
         // architecture name
         let mut sys_info: SYSTEM_INFO = unsafe { std::mem::zeroed() };
@@ -174,41 +206,242 @@ impl NPUUsage {
 
     fn get_intel_npu_info() -> PropertyKeyInfo {
         let mut result = PropertyKeyInfo::default();
-        let core = openvino::Core::new().unwrap();
+
+        let core = match openvino::Core::new() {
+            Ok(core) => core,
+            Err(_) => return PropertyKeyInfo::default(),
+        };
+
         let dev = openvino::DeviceType::NPU;
 
-        result.supported_properties = core
+        let supported_properties: String = core
             .get_property(&dev, &openvino::PropertyKey::SupportedProperties)
-            .unwrap();
-        result.available_devices = core
+            .unwrap_or_default();
+
+        // split string by whitespace
+        result.supported_properties = supported_properties
+            .split_whitespace()
+            .map(|s| s.to_string())
+            .collect();
+
+        let available_devices: String = core
             .get_property(&dev, &openvino::PropertyKey::AvailableDevices)
-            .unwrap();
-        result.optimal_number_of_infer_requests = core
+            .unwrap_or_default();
+
+        result.available_devices = available_devices.parse::<u32>().unwrap_or(0);
+
+        let optimal_number_of_infer_requests: String = core
             .get_property(&dev, &openvino::PropertyKey::OptimalNumberOfInferRequests)
-            .unwrap();
-        result.range_for_async_infer_requests = core
+            .unwrap_or_default();
+
+        result.optimal_number_of_infer_requests =
+            optimal_number_of_infer_requests.parse::<u32>().unwrap_or(0);
+
+        let range_for_async_infer_requests: String = core
             .get_property(&dev, &openvino::PropertyKey::RangeForAsyncInferRequests)
-            .unwrap();
+            .unwrap_or_default();
+
+        let range_for_async_infer_requests: Vec<&str> =
+            range_for_async_infer_requests.split_whitespace().collect();
+        result.range_for_async_infer_requests = (
+            range_for_async_infer_requests[0]
+                .parse::<u32>()
+                .unwrap_or_default(),
+            range_for_async_infer_requests[1]
+                .parse::<u32>()
+                .unwrap_or_default(),
+        );
+
         result.range_for_streams = core
             .get_property(&dev, &openvino::PropertyKey::RangeForStreams)
-            .unwrap();
+            .unwrap_or_default();
+
         result.device_full_name = core
             .get_property(&dev, &openvino::PropertyKey::DeviceFullName)
-            .unwrap();
-        result.device_capabilities = core
+            .unwrap_or_default();
+
+        let device_capabilities: String = core
             .get_property(&dev, &openvino::PropertyKey::DeviceCapabilities)
-            .unwrap();
+            .unwrap_or_default();
+
+        let device_capabilities: Vec<&str> = device_capabilities.split_whitespace().collect();
+        result.device_capabilities = device_capabilities.iter().map(|s| s.to_string()).collect();
+
         result.model_name = core
             .get_property(&dev, &openvino::PropertyKey::ModelName)
-            .unwrap_or("N/A".to_string());
-        result.optimal_batch_size = core
+            .unwrap_or_default();
+
+        let optimal_batch_size: String = core
             .get_property(&dev, &openvino::PropertyKey::OptimalBatchSize)
-            .unwrap_or("N/A".to_string());
-        result.max_batch_size = core
+            .unwrap_or_default();
+
+        result.optimal_batch_size = optimal_batch_size.parse::<u32>().unwrap_or(0);
+
+        let max_batch_size: String = core
             .get_property(&dev, &openvino::PropertyKey::MaxBatchSize)
-            .unwrap_or("N/A".to_string());
-        // Add more properties as needed
+            .unwrap_or_default();
+
+        result.max_batch_size = max_batch_size.parse::<u32>().unwrap_or_default();
+
+        result.rw_property_key = Self::get_rw_property_key(core, dev);
 
         result
+    }
+
+    fn get_rw_property_key(core: openvino::Core, dev: openvino::DeviceType) -> RwPropertyKeyInfo {
+        let mut rw_property_key = RwPropertyKeyInfo::new();
+
+        rw_property_key.cache_dir = core
+            .get_property(
+                &dev,
+                &openvino::PropertyKey::Rw(openvino::RwPropertyKey::CacheDir),
+            )
+            .unwrap_or_default();
+
+        rw_property_key.cache_mode = core
+            .get_property(
+                &dev,
+                &openvino::PropertyKey::Rw(openvino::RwPropertyKey::CacheMode),
+            )
+            .unwrap_or_default();
+
+        let num_stream = core
+            .get_property(
+                &dev,
+                &openvino::PropertyKey::Rw(openvino::RwPropertyKey::NumStreams),
+            )
+            .unwrap_or_default();
+        rw_property_key.num_streams = num_stream.parse::<u32>().unwrap_or(0);
+
+        rw_property_key.affinity = core
+            .get_property(
+                &dev,
+                &openvino::PropertyKey::Rw(openvino::RwPropertyKey::Affinity),
+            )
+            .unwrap_or_default();
+
+        let inference_num_threads = core
+            .get_property(
+                &dev,
+                &openvino::PropertyKey::Rw(openvino::RwPropertyKey::InferenceNumThreads),
+            )
+            .unwrap_or_default();
+
+        rw_property_key.inference_num_threads = inference_num_threads.parse::<u32>().unwrap_or(0);
+
+        let hint_enable_cpu_pinning = core
+            .get_property(
+                &dev,
+                &openvino::PropertyKey::Rw(openvino::RwPropertyKey::HintEnableCpuPinning),
+            )
+            .unwrap_or("false".to_string());
+
+        rw_property_key.hint_enable_cpu_pinning =
+            hint_enable_cpu_pinning.parse::<bool>().unwrap_or(false);
+
+        let hint_enable_hyper_threading = core
+            .get_property(
+                &dev,
+                &openvino::PropertyKey::Rw(openvino::RwPropertyKey::HintEnableHyperThreading),
+            )
+            .unwrap_or("false".to_string());
+        rw_property_key.hint_enable_hyper_threading =
+            hint_enable_hyper_threading.parse::<bool>().unwrap_or(false);
+
+        rw_property_key.hint_performance_mode = core
+            .get_property(
+                &dev,
+                &openvino::PropertyKey::Rw(openvino::RwPropertyKey::HintPerformanceMode),
+            )
+            .unwrap_or("".to_string());
+
+        rw_property_key.hint_scheduling_core_type = core
+            .get_property(
+                &dev,
+                &openvino::PropertyKey::Rw(openvino::RwPropertyKey::HintSchedulingCoreType),
+            )
+            .unwrap_or("".to_string());
+
+        rw_property_key.hint_inference_precision = core
+            .get_property(
+                &dev,
+                &openvino::PropertyKey::Rw(openvino::RwPropertyKey::HintInferencePrecision),
+            )
+            .unwrap_or("".to_string());
+
+        let hint_num_requests = core
+            .get_property(
+                &dev,
+                &openvino::PropertyKey::Rw(openvino::RwPropertyKey::HintNumRequests),
+            )
+            .unwrap_or("0".to_string());
+
+        rw_property_key.hint_num_requests = hint_num_requests.parse::<u32>().unwrap_or(0);
+
+        rw_property_key.log_level = core
+            .get_property(
+                &dev,
+                &openvino::PropertyKey::Rw(openvino::RwPropertyKey::LogLevel),
+            )
+            .unwrap_or("".to_string());
+
+        rw_property_key.hint_model_priority = core
+            .get_property(
+                &dev,
+                &openvino::PropertyKey::Rw(openvino::RwPropertyKey::HintModelPriority),
+            )
+            .unwrap_or("".to_string());
+
+        let enable_profiling = core
+            .get_property(
+                &dev,
+                &openvino::PropertyKey::Rw(openvino::RwPropertyKey::EnableProfiling),
+            )
+            .unwrap_or("false".to_string());
+
+        rw_property_key.enable_profiling = enable_profiling.parse::<bool>().unwrap_or(false);
+
+        rw_property_key.device_priorities = core
+            .get_property(
+                &dev,
+                &openvino::PropertyKey::Rw(openvino::RwPropertyKey::DevicePriorities),
+            )
+            .unwrap_or("".to_string());
+
+        rw_property_key.hint_execution_mode = core
+            .get_property(
+                &dev,
+                &openvino::PropertyKey::Rw(openvino::RwPropertyKey::HintExecutionMode),
+            )
+            .unwrap_or("".to_string());
+
+        let force_tbb_terminate = core
+            .get_property(
+                &dev,
+                &openvino::PropertyKey::Rw(openvino::RwPropertyKey::ForceTbbTerminate),
+            )
+            .unwrap_or("false".to_string());
+
+        rw_property_key.force_tbb_terminate = force_tbb_terminate.parse::<bool>().unwrap_or(false);
+
+        let enable_mmap = core
+            .get_property(
+                &dev,
+                &openvino::PropertyKey::Rw(openvino::RwPropertyKey::EnableMmap),
+            )
+            .unwrap_or("false".to_string());
+
+        rw_property_key.enable_mmap = enable_mmap.parse::<bool>().unwrap_or(false);
+
+        let auto_batch_timeout = core
+            .get_property(
+                &dev,
+                &openvino::PropertyKey::Rw(openvino::RwPropertyKey::AutoBatchTimeout),
+            )
+            .unwrap_or("0".to_string());
+
+        rw_property_key.auto_batch_timeout = auto_batch_timeout.parse::<u32>().unwrap_or(0);
+
+        rw_property_key
     }
 }

@@ -2,28 +2,52 @@ use sys_stats::SocDetails;
 use sys_stats::{CPUStats, GPUStats, MemoryStats, NPUStats};
 
 fn main() {
-    let gpu = GPUStats::get_gpu_info().unwrap();
-    println!("----------------------");
-    println!("{:#?}", gpu);
-    println!("----------------------");
+    match GPUStats::get_gpu_info() {
+        Ok(info) => {
+            println!("----------------------");
+            println!("{:#?}", info);
+            println!("----------------------");
+        }
+        Err(e) => {
+            eprintln!("Failed to get GPU info: {:?}", e);
+        }
+    };
 
-    let memory_stats = MemoryStats::get_system_memory_info().unwrap();
-    println!("----------------------");
-    println!("{:#?}", memory_stats);
-    println!("----------------------");
+    match MemoryStats::get_system_memory_info() {
+        Ok(info) => {
+            println!("----------------------");
+            println!("{:#?}", info);
+            println!("----------------------");
+        }
+        Err(e) => {
+            eprintln!("Failed to get Memory info: {:?}", e);
+        }
+    }
 
-    let cpu_stats = CPUStats::get_cpu_info().unwrap();
-    println!("----------------------");
-    println!("{:#?}", cpu_stats);
-    println!("----------------------");
+    match CPUStats::get_cpu_info() {
+        Ok(info) => {
+            println!("----------------------");
+            println!("{:#?}", info);
+            println!("----------------------");
+        }
+        Err(e) => {
+            eprintln!("Failed to get CPU info: {:?}", e);
+        }
+    }
+
+    match NPUStats::get_npu_info() {
+        Ok(info) => {
+            println!("----------------------");
+            println!("{:#?}", info);
+            println!("----------------------");
+        }
+        Err(e) => {
+            eprintln!("Failed to get NPU info: {:?}", e);
+        }
+    }
 
     let socs = SocDetails::get_current_soc_info();
     println!("----------------------");
     println!("{:#?}", socs);
-    println!("----------------------");
-
-    println!("----------------------");
-    println!("NPU avaliable : {}", NPUStats::is_npu_available());
-    println!("NPU tops at: {} TOPS", NPUStats::total_npu_capability());
     println!("----------------------");
 }

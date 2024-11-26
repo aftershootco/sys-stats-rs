@@ -4,27 +4,7 @@ use serde_json::Error;
 use std::process::Command;
 
 impl SocDetails {
-    /// Get the SOC details by name
-    /// TODO: when multiple SOCs are available, match more details or ID etc
-    pub fn get_soc_info_by_name(name: &str) -> Soc {
-        // parse the soc.json file and return the Soc struct
-
-        let s = include_str!("db/apple/soc.json");
-        let soc_details: Result<SocCollection, Error> = serde_json::from_str(s);
-
-        match soc_details {
-            Ok(soc) => {
-                for s in soc.0 {
-                    if s.name == Some(name.to_string()) {
-                        return s;
-                    }
-                }
-                Soc::new(None, None, None, 0, None, None, None, None, 0)
-            }
-            Err(_) => Soc::new(None, None, None, 0, None, None, None, None, 0),
-        }
-    }
-
+   
     pub fn get_current_soc_info() -> Soc {
         // parse the soc.json file and return the Soc struct
 
