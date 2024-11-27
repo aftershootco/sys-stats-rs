@@ -7,7 +7,7 @@ use objc2_metal::{MTLCreateSystemDefaultDevice, MTLDevice};
 extern "C" {}
 
 impl GPUUsage {
-    pub fn get_gpu_info() -> Result<GPUData, String> {
+    pub fn get_gpu_info() -> Result<GPUData, Box<dyn std::error::Error>> {
         let mut result: GPUData = GPUData {
             name: "".to_string(),
             architecture: "".to_string(),
@@ -20,6 +20,7 @@ impl GPUUsage {
         unsafe {
             let mtl_device = { MTLCreateSystemDefaultDevice() };
             let mtl_device = mtl_device.as_ref().unwrap();
+
             result.name = mtl_device.name().to_string();
             result.architecture = mtl_device.architecture().name().to_string();
 
@@ -33,7 +34,7 @@ impl GPUUsage {
         Ok(result)
     }
 
-    pub fn get_gpus_list() -> Result<Vec<GPUData>, String> {
+    pub fn get_gpus_list() -> Result<Vec<GPUData>, Box<dyn std::error::Error>> {
         let mut results: Vec<GPUData> = Vec::new();
         results.push(GPUUsage::get_gpu_info()?);
         Ok(results)
@@ -49,11 +50,21 @@ impl GPUUsage {
     }
 
     pub fn current_gpu_memory_usage() -> u64 {
-        Self::total_gpu_memory() - Self::current_cpu_memory_free()
+        unsafe {
+            // this approach is not accurate, but it's the only way to get the current allocated size
+            // as apple does not provide a way to get the free/used gpu memory
+
+            // let mtl_device = MTLCreateSystemDefaultDevice();
+            // let current_allocated_size: u64 = msg_send![mtl_device, currentAllocatedSize];
+            // current_allocated_size
+
+            // rough estimate of the current used memory
+            Self::total_gpu_memory() - Self::current_cpu_memory_free().unwrap()
+        }
     }
 
     pub fn current_gpu_memory_free() -> u64 {
-        let free_memory: u64;
+        let mut free_memory: u64 = 0;
 
         unsafe {
             let mtl_device = MTLCreateSystemDefaultDevice();
@@ -62,7 +73,7 @@ impl GPUUsage {
             // If the memory is unified, we can use the CPU memory to get the free memory
             // also apple does not provide a way to get the free/used gpu memory
             if is_unified {
-                free_memory = Self::current_cpu_memory_free();
+                free_memory = (Self::current_cpu_memory_free().unwrap()); // convert to bytes
             } else {
                 let mtl_device = { MTLCreateSystemDefaultDevice() };
                 let mtl_device = mtl_device.as_ref().unwrap();
@@ -82,8 +93,8 @@ impl GPUUsage {
         }
     }
 
-    fn current_cpu_memory_free() -> u64 {
-        let mem_info = sys_info::mem_info().unwrap();
-        mem_info.free * 1024
+    fn current_cpu_memory_free() -> Result<u64, Box<dyn std::error::Error>> {
+        let mem_info = sys_info::mem_info()?;
+        Ok(mem_info.free * 1024) // convert to bytes
     }
 }

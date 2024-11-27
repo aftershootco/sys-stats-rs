@@ -43,16 +43,16 @@ impl GPUUsage {
         desc_list
     }
 
-    pub fn get_gpu_info() -> Result<GPUData, String> {
-        let gpus = Self::get_gpus_list().unwrap();
+    pub fn get_gpu_info() -> Result<GPUData, Box<dyn std::error::Error>> {
+        let gpus = Self::get_gpus_list()?;
         if gpus.len() == 0 {
-            return Err("No GPU found".to_string());
+            return Err("No GPU found".to_string().into());
         }
 
         Ok(gpus[0].clone())
     }
 
-    pub fn get_gpus_list() -> Result<Vec<GPUData>, String> {
+    pub fn get_gpus_list() -> Result<Vec<GPUData>, Box<dyn std::error::Error>> {
         let mut results = vec![];
         let gpu_desc_list = Self::get_dxgi_list();
 
@@ -63,17 +63,17 @@ impl GPUUsage {
 
         // if we have nvidia gpu
         if gpu_desc_list.iter().any(|x| x.VendorId == 4318) {
-            let nvml = Nvml::init().expect("Failed to initialize NVML");
-            let nv_gpu_count = nvml.device_count().expect("Failed to get device count");
+            let nvml = Nvml::init()?;
+            let nv_gpu_count = nvml.device_count()?;
 
             if nv_gpu_count > 0 {
-                let device = nvml.device_by_index(0).expect("Failed to get device");
+                let device = nvml.device_by_index(0)?;
 
-                let memory_info = device.memory_info().expect("Failed to get memory info");
+                let memory_info = device.memory_info()?;
 
                 let result = GPUData::new_with_values(
-                    device.name().unwrap_or("Unknown".to_string()),
-                    device.architecture().unwrap().to_string(),
+                    device.name()?,
+                    device.architecture()?.to_string(),
                     memory_info.total,
                     memory_info.free,
                     memory_info.used,
@@ -87,23 +87,19 @@ impl GPUUsage {
         if gpu_desc_list.iter().any(|x| x.VendorId == 4098) {
             // if we have amd gpu
             // use adlx to get the gpu info
-            let adlx_helper = AdlxHelper::new().unwrap();
-            let gpus = adlx_helper.system().gpus().unwrap();
-            let pms = adlx_helper
-                .system()
-                .performance_monitoring_services()
-                .unwrap();
+            let adlx_helper = AdlxHelper::new()?;
+            let gpus = adlx_helper.system().gpus()?;
+            let pms = adlx_helper.system().performance_monitoring_services()?;
 
-            let gpu1 = gpus.at(0).unwrap();
+            let gpu1 = gpus.at(0)?;
 
             let result = GPUData::new_with_values(
-                gpu1.name().unwrap().to_string(),
-                gpu1.asic_family_type().unwrap().to_string(),
-                gpu1.total_vram().unwrap() as u64,
-                pms.current_gpu_metrics(&gpu1).unwrap().vram().unwrap() as u64,
-                gpu1.total_vram().unwrap() as u64
-                    - pms.current_gpu_metrics(&gpu1).unwrap().vram().unwrap() as u64,
-                gpu1.type_().unwrap() == 1,
+                gpu1.name()?.to_string(),
+                gpu1.asic_family_type()?.to_string(),
+                gpu1.total_vram()? as u64,
+                pms.current_gpu_metrics(&gpu1)?.vram()? as u64,
+                gpu1.total_vram().unwrap() as u64 - pms.current_gpu_metrics(&gpu1)?.vram()? as u64,
+                gpu1.type_()? == 1,
             );
 
             results.push(result);
