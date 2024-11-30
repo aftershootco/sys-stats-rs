@@ -24,10 +24,13 @@ impl NPUUsage {
     }
 
     pub fn get_npu_info() -> Result<NPUData, String> {
-        Ok(NPUData {
-            name: "NPU".to_string(),
-            capability: Self::total_npu_capability(),
-        })
+        if Self::get_architecture() == "arm64" {
+            return Ok(NPUData {
+                name: "NPU".to_string(),
+                capability: Self::total_npu_capability(),
+            });
+        }
+        Err("NPU not available".to_string())
     }
     pub fn total_npu_capability() -> f32 {
         // get the soc details and return the NPU performance

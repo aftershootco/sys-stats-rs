@@ -74,6 +74,13 @@ impl GPUUsage {
             // this approach is not accurate, but it's the only way to get the current allocated size
             // as apple does not provide a way to get the free/used gpu memory
             // rough estimate of the current used memory
+
+            println!("total gpu memory: {}", Self::total_gpu_memory()?);
+            println!(
+                "current gpu memory free: {}",
+                Self::current_gpu_memory_free()?
+            );
+
             Ok(Self::total_gpu_memory()? - Self::current_gpu_memory_free()?)
         }
     }
@@ -98,7 +105,7 @@ impl GPUUsage {
             } else {
                 let total_memory = mtl_device.recommendedMaxWorkingSetSize();
                 let used_memory = mtl_device.currentAllocatedSize() as u64;
-                free_memory = total_memory - used_memory;
+                free_memory = total_memory - (used_memory / 2);
             }
         }
         Ok(free_memory)
