@@ -25,7 +25,13 @@ impl GPUUsage {
             };
 
             result.name = mtl_device.name().to_string();
-            result.architecture = mtl_device.architecture().name().to_string();
+
+            // if its intel architecture, it will return an empty string
+            result.architecture = if std::env::consts::ARCH == "aarch64" {
+                mtl_device.architecture().name().to_string()
+            } else {
+                "Intel".to_string()
+            };
 
             // handling memory calculations separately, because apple does not provide a direct way to get the free/used gpu memory
             result.total_memory = Self::total_gpu_memory()?;
