@@ -19,15 +19,18 @@ impl GPUUsage {
 
         unsafe {
             let mtl_device = { MTLCreateSystemDefaultDevice() };
-            let mtl_device = mtl_device.as_ref().unwrap();
+            let mtl_device = match mtl_device.as_ref() {
+                Some(device) => device,
+                None => return Err("Failed to get MTLDevice".into()),
+            };
 
             result.name = mtl_device.name().to_string();
             result.architecture = mtl_device.architecture().name().to_string();
 
             // handling memory calculations separately, because apple does not provide a direct way to get the free/used gpu memory
-            result.total_memory = Self::total_gpu_memory();
-            result.used_memory = Self::current_gpu_memory_usage();
-            result.free_memory = Self::current_gpu_memory_free();
+            result.total_memory = Self::total_gpu_memory()?;
+            result.used_memory = Self::current_gpu_memory_usage()?;
+            result.free_memory = Self::current_gpu_memory_free()?;
 
             result.has_unified_memory = mtl_device.hasUnifiedMemory();
         }
@@ -40,56 +43,72 @@ impl GPUUsage {
         Ok(results)
     }
 
-    pub fn total_gpu_memory() -> u64 {
+    pub fn total_gpu_memory() -> Result<u64, Box<dyn std::error::Error>> {
         unsafe {
             let mtl_device = MTLCreateSystemDefaultDevice();
+
+            let mtl_device = match mtl_device.as_ref() {
+                Some(device) => device,
+                None => return Err("Failed to get MTLDevice".into()),
+            };
+
             let recommended_max_working_set_size: u64 =
                 msg_send![mtl_device, recommendedMaxWorkingSetSize];
-            recommended_max_working_set_size
+
+            if recommended_max_working_set_size == 0 {
+                return Err("Failed to get total GPU memory".into());
+            }
+
+            Ok(recommended_max_working_set_size)
         }
     }
 
-    pub fn current_gpu_memory_usage() -> u64 {
+    pub fn current_gpu_memory_usage() -> Result<u64, Box<dyn std::error::Error>> {
         unsafe {
             // this approach is not accurate, but it's the only way to get the current allocated size
             // as apple does not provide a way to get the free/used gpu memory
-
-            // let mtl_device = MTLCreateSystemDefaultDevice();
-            // let current_allocated_size: u64 = msg_send![mtl_device, currentAllocatedSize];
-            // current_allocated_size
-
             // rough estimate of the current used memory
-            Self::total_gpu_memory() - Self::current_cpu_memory_free().unwrap()
+            Ok(Self::total_gpu_memory()? - Self::current_gpu_memory_free()?)
         }
     }
 
-    pub fn current_gpu_memory_free() -> u64 {
-        let mut free_memory: u64 = 0;
+    pub fn current_gpu_memory_free() -> Result<u64, Box<dyn std::error::Error>> {
+        let free_memory: u64;
 
         unsafe {
             let mtl_device = MTLCreateSystemDefaultDevice();
-            let is_unified: bool = msg_send![mtl_device, hasUnifiedMemory];
+
+            let mtl_device = match mtl_device.as_ref() {
+                Some(device) => device,
+                None => return Err("Failed to get MTLDevice".into()),
+            };
+
+            let is_unified: bool = Self::has_unified_memory()?;
 
             // If the memory is unified, we can use the CPU memory to get the free memory
             // also apple does not provide a way to get the free/used gpu memory
             if is_unified {
-                free_memory = (Self::current_cpu_memory_free().unwrap()); // convert to bytes
+                free_memory = Self::current_cpu_memory_free()?; // convert to bytes
             } else {
-                let mtl_device = { MTLCreateSystemDefaultDevice() };
-                let mtl_device = mtl_device.as_ref().unwrap();
-
                 let total_memory = mtl_device.recommendedMaxWorkingSetSize();
                 let used_memory = mtl_device.currentAllocatedSize() as u64;
                 free_memory = total_memory - used_memory;
             }
         }
-        free_memory
+        Ok(free_memory)
     }
 
-    pub fn has_unified_memory() -> bool {
+    pub fn has_unified_memory() -> Result<bool, Box<dyn std::error::Error>> {
         unsafe {
             let mtl_device = MTLCreateSystemDefaultDevice();
-            msg_send![mtl_device, hasUnifiedMemory]
+
+            let mtl_device = match mtl_device.as_ref() {
+                Some(device) => device,
+                None => return Err("Failed to get MTLDevice".into()),
+            };
+
+            let is_unified: bool = msg_send![mtl_device, hasUnifiedMemory];
+            Ok(is_unified)
         }
     }
 
