@@ -35,6 +35,11 @@ impl NPUUsage {
     pub fn total_npu_capability() -> f32 {
         // get the soc details and return the NPU performance
         let soc = SocDetails::get_current_soc_info();
-        soc.npu_performance().unwrap()
+        // use if let to avoid panics
+        if let Some(npu) = soc.npu_performance() {
+            npu
+        } else {
+            0.0
+        }
     }
 }
