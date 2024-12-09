@@ -1,6 +1,8 @@
 use crate::cpu::{CPUData, CPUUsage};
 use std::process::Command;
 
+use super::CPUArchitecture;
+
 impl CPUUsage {
     pub fn get_cpu_info() -> Result<CPUData, Box<dyn std::error::Error>> {
         Ok(CPUData {
@@ -30,7 +32,7 @@ impl CPUUsage {
         sys_info::loadavg().unwrap().one as f32
     }
 
-    fn get_architecture() -> String {
+    fn get_architecture() -> CPUArchitecture {
         let output = Command::new("sh")
             .arg("-c")
             .arg("uname -m")
@@ -38,6 +40,11 @@ impl CPUUsage {
             .expect("Failed to execute command");
 
         let name = String::from_utf8_lossy(&output.stdout);
-        name.trim().to_string()
+        match name.trim() {
+            "i386" => CPUArchitecture::I386,
+            "x86_64" => CPUArchitecture::X86_64,
+            "arm64" => CPUArchitecture::Arm64,
+            _ => CPUArchitecture::Unknown,
+        }
     }
 }
