@@ -3,6 +3,8 @@ use anyhow::Result;
 use winapi::um::sysinfoapi::GetSystemInfo;
 use winapi::um::sysinfoapi::SYSTEM_INFO;
 
+use super::CPUArchitecture;
+
 impl CPUUsage {
     pub fn get_cpu_info() -> Result<CPUData, String> {
         let mut sys_info: SYSTEM_INFO = unsafe { std::mem::zeroed() };
@@ -48,19 +50,19 @@ impl CPUUsage {
         output.to_string()
     }
 
-    fn get_cpu_architecture() -> String {
+    fn get_cpu_architecture() -> CPUArchitecture {
         // using winapi to get the architecture
         let mut sys_info: SYSTEM_INFO = unsafe { std::mem::zeroed() };
         unsafe {
             GetSystemInfo(&mut sys_info);
         }
         match unsafe { sys_info.u.s().wProcessorArchitecture } {
-            0 => "x86".to_string(),
-            5 => "ARM".to_string(),
-            9 => "x64".to_string(),
-            12 => "ARM64".to_string(),
-            14 => "RISC-V".to_string(),
-            _ => "Unknown".to_string(),
+            0 => CPUArchitecture::I386,
+            5 => CPUArchitecture::Arm,
+            9 => CPUArchitecture::X86_64,
+            12 => CPUArchitecture::Arm64,
+            14 => CPUArchitecture::RiscV,
+            _ => CPUArchitecture::Unknown,
         }
     }
 }
