@@ -38,7 +38,11 @@ impl GPUUsage {
             }
 
             if mac_version >= 14 {
-                result.architecture = mtl_device.architecture().name().to_string();
+                if std::env::consts::ARCH == "aarch64" {
+                    result.architecture = mtl_device.architecture().name().to_string();
+                } else {
+                    result.architecture = "Intel".to_string()
+                }
             } else {
                 result.architecture = "Unknown".to_string()
             };
@@ -48,7 +52,7 @@ impl GPUUsage {
             result.used_memory = Self::current_gpu_memory_usage()?;
             result.free_memory = Self::current_gpu_memory_free()?;
 
-            result.has_unified_memory = mtl_device.hasUnifiedMemory();
+            result.has_unified_memory = Self::has_unified_memory().unwrap()
         }
         Ok(result)
     }
@@ -85,13 +89,15 @@ impl GPUUsage {
             // as apple does not provide a way to get the free/used gpu memory
             // rough estimate of the current used memory
 
-            println!("total gpu memory: {}", Self::total_gpu_memory()?);
-            println!(
-                "current gpu memory free: {}",
-                Self::current_gpu_memory_free()?
-            );
+            let total = Self::total_gpu_memory()?;
+            let free = Self::current_gpu_memory_free()?;
 
-            Ok(Self::total_gpu_memory()? - Self::current_gpu_memory_free()?)
+            if total < free {
+                eprintln!("Free can not be more than total");
+                return Ok(0);
+            }
+
+            Ok(total - free)
         }
     }
 
@@ -115,7 +121,7 @@ impl GPUUsage {
             } else {
                 let total_memory = mtl_device.recommendedMaxWorkingSetSize();
                 let used_memory = mtl_device.currentAllocatedSize() as u64;
-                free_memory = total_memory - (used_memory / 2);
+                free_memory = total_memory - (used_memory);
             }
         }
         Ok(free_memory)
@@ -123,15 +129,19 @@ impl GPUUsage {
 
     pub fn has_unified_memory() -> Result<bool, Box<dyn std::error::Error>> {
         unsafe {
-            let mtl_device = MTLCreateSystemDefaultDevice();
+            if std::env::consts::ARCH == "aarch64" {
+                let mtl_device = MTLCreateSystemDefaultDevice();
 
-            let mtl_device = match mtl_device.as_ref() {
-                Some(device) => device,
-                None => return Err("Failed to get MTLDevice".into()),
-            };
+                let mtl_device = match mtl_device.as_ref() {
+                    Some(device) => device,
+                    None => return Err("Failed to get MTLDevice".into()),
+                };
 
-            let is_unified: bool = msg_send![mtl_device, hasUnifiedMemory];
-            Ok(is_unified)
+                let is_unified: bool = msg_send![mtl_device, hasUnifiedMemory];
+                Ok(is_unified)
+            } else {
+                Ok(false)
+            }
         }
     }
 
