@@ -21,6 +21,10 @@ windows = { version = "0.58.0", features = [
     "Win32_Graphics_DXCore",
 ] } # openvino = {version = "0.8.0", optional = true}
 
+[target.'cfg(target_os = "linux")'.dependencies]
+nvml-wrapper = "0.10.0"
+adlx = "0.0.0-alpha.1"
+
 [dependencies]
 sys-info = "0.9.1"
 serde = { version = "1.0.215", features = ["derive"] }
