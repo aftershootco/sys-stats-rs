@@ -3,6 +3,9 @@ mod macos;
 #[cfg(target_os = "windows")]
 mod windows;
 
+#[cfg(target_os = "linux")]
+mod linux;
+
 pub struct CPUUsage;
 
 #[derive(Debug)]
@@ -19,6 +22,7 @@ pub enum CPUArchitecture {
     Arm64,
     I386,
     X86_64,
-    RiscV,
+    RiscV32,
+    RiscV64,
     Unknown,
 }

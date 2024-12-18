@@ -4,6 +4,9 @@ mod macos;
 #[cfg(target_os = "windows")]
 mod windows;
 
+#[cfg(target_os = "linux")]
+mod linux;
+
 use serde::{Deserialize, Serialize};
 
 pub struct SocDetails;
