@@ -102,6 +102,8 @@ impl GPUUsage {
                 gpu1.type_()? == 1,
             );
 
+            drop(adlx_helper);
+
             results.push(result);
         }
 
