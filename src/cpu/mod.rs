@@ -22,6 +22,7 @@ pub enum CPUArchitecture {
     Arm64,
     I386,
     X86_64,
-    RiscV,
+    RiscV32,
+    RiscV64,
     Unknown,
 }
