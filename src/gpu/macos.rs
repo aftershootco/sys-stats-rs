@@ -84,21 +84,19 @@ impl GPUUsage {
     }
 
     pub fn current_gpu_memory_usage() -> Result<u64, Box<dyn std::error::Error>> {
-        unsafe {
-            // this approach is not accurate, but it's the only way to get the current allocated size
-            // as apple does not provide a way to get the free/used gpu memory
-            // rough estimate of the current used memory
+        // this approach is not accurate, but it's the only way to get the current allocated size
+        // as apple does not provide a way to get the free/used gpu memory
+        // rough estimate of the current used memory
 
-            let total = Self::total_gpu_memory()?;
-            let free = Self::current_gpu_memory_free()?;
+        let total = Self::total_gpu_memory()?;
+        let free = Self::current_gpu_memory_free()?;
 
-            if total < free {
-                eprintln!("Free can not be more than total");
-                return Ok(0);
-            }
-
-            Ok(total - free)
+        if total < free {
+            eprintln!("Free can not be more than total");
+            return Ok(0);
         }
+
+        Ok(total - free)
     }
 
     pub fn current_gpu_memory_free() -> Result<u64, Box<dyn std::error::Error>> {
