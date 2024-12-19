@@ -61,7 +61,7 @@ impl CPUUsage {
             5 => CPUArchitecture::Arm,
             9 => CPUArchitecture::X86_64,
             12 => CPUArchitecture::Arm64,
-            14 => CPUArchitecture::RiscV,
+            14 => CPUArchitecture::RiscV64,
             _ => CPUArchitecture::Unknown,
         }
     }
