@@ -1,5 +1,6 @@
 use crate::gpu::{GPUData, GPUUsage};
 
+use adlx::ffi::ADLX_GPU_TYPE_GPUTYPE_DISCRETE;
 use adlx::helper::AdlxHelper;
 use anyhow::Result;
 use nvml_wrapper::Nvml;
@@ -91,20 +92,33 @@ impl GPUUsage {
             let gpus = adlx_helper.system().gpus()?;
             let pms = adlx_helper.system().performance_monitoring_services()?;
 
-            let gpu1 = gpus.at(0)?;
+            for gpu in gpus.iter() {
+                // skipping integrated gpu for now
+                if gpu.type_().unwrap() == ADLX_GPU_TYPE_GPUTYPE_DISCRETE {
+                    let dedicated = GPUData::new_with_values(
+                        gpu.name()?.to_string(),
+                        "Radeon".to_string(),
+                        gpu.total_vram()? as u64,
+                        pms.current_gpu_metrics(&gpu)?.vram()? as u64,
+                        gpu.total_vram()? as u64 - pms.current_gpu_metrics(&gpu)?.vram()? as u64,
+                        false,
+                    );
+                    results.push(dedicated);
+                }
+                //else {
 
-            let result = GPUData::new_with_values(
-                gpu1.name()?.to_string(),
-                gpu1.asic_family_type()?.to_string(),
-                gpu1.total_vram()? as u64,
-                pms.current_gpu_metrics(&gpu1)?.vram()? as u64,
-                gpu1.total_vram().unwrap() as u64 - pms.current_gpu_metrics(&gpu1)?.vram()? as u64,
-                gpu1.type_()? == 1,
-            );
-
-            drop(adlx_helper);
-
-            results.push(result);
+                //     let desc = gpu_desc_list.iter().find(|x| x.VendorId == 4098).unwrap();
+                //
+                //     let result = GPUData::new_with_values(
+                //         gpu1.name()?.to_string(),
+                //         gpu1.asic_family_type()?.to_string(),
+                //         (desc.SharedSystemMemory) as u64,
+                //         (desc.DedicatedVideoMemory) as u64,
+                //         (desc.SharedSystemMemory) as u64 - (desc.DedicatedVideoMemory) as u64,
+                //         true,
+                //     );
+                //}
+            }
         }
 
         if gpu_desc_list.iter().any(|x| x.VendorId == 32902) {

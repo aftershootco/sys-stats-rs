@@ -6,16 +6,16 @@ use winapi::um::sysinfoapi::SYSTEM_INFO;
 
 use anyhow::Result;
 
-use windows::Win32::Graphics::DXCore::DXCoreAdapterProperty;
-use windows::Win32::Graphics::DXCore::DXCoreCreateAdapterFactory;
-use windows::Win32::Graphics::DXCore::DXCoreHardwareID;
-use windows::Win32::Graphics::DXCore::DriverDescription;
-use windows::Win32::Graphics::DXCore::DriverVersion;
 // use windows::Win32::Graphics::DXCore::HardwareIDParts;
 use windows::Win32::Graphics::DXCore::AcgCompatible;
 use windows::Win32::Graphics::DXCore::ComputePreemptionGranularity;
+use windows::Win32::Graphics::DXCore::DXCoreAdapterProperty;
+use windows::Win32::Graphics::DXCore::DXCoreCreateAdapterFactory;
+use windows::Win32::Graphics::DXCore::DXCoreHardwareID;
 use windows::Win32::Graphics::DXCore::DedicatedAdapterMemory;
 use windows::Win32::Graphics::DXCore::DedicatedSystemMemory;
+use windows::Win32::Graphics::DXCore::DriverDescription;
+use windows::Win32::Graphics::DXCore::DriverVersion;
 use windows::Win32::Graphics::DXCore::GraphicsPreemptionGranularity;
 use windows::Win32::Graphics::DXCore::IDXCoreAdapter;
 use windows::Win32::Graphics::DXCore::IDXCoreAdapterFactory;

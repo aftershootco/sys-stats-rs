@@ -1,5 +1,6 @@
 use crate::cpu::{CPUData, CPUUsage};
 use anyhow::Result;
+use sysinfo::{CpuRefreshKind, RefreshKind, System};
 use winapi::um::sysinfoapi::GetSystemInfo;
 use winapi::um::sysinfoapi::SYSTEM_INFO;
 
@@ -24,13 +25,9 @@ impl CPUUsage {
     }
 
     pub fn num_of_cores() -> u32 {
-        // let mut sys_info: SYSTEM_INFO = unsafe { std::mem::zeroed() };
-        // unsafe {
-        //     GetSystemInfo(&mut sys_info);
-        // }
-        // sys_info.dwNumberOfProcessors
-
-        sys_info::cpu_num().unwrap() as u32
+        let s =
+            System::new_with_specifics(RefreshKind::nothing().with_cpu(CpuRefreshKind::nothing()));
+        s.cpus().len() as u32
     }
 
     pub fn average_usage() -> f32 {
@@ -38,16 +35,15 @@ impl CPUUsage {
     }
 
     fn get_cpu_name() -> String {
-        // use wmic
-        let output = std::process::Command::new("wmic")
-            .args(&["cpu", "get", "name"])
-            .output()
-            .expect("failed to execute process");
+        let s =
+            System::new_with_specifics(RefreshKind::nothing().with_cpu(CpuRefreshKind::nothing()));
+        let cpu = s.cpus().get(0);
 
-        let output = String::from_utf8_lossy(&output.stdout);
-        let output = output.split("\n").collect::<Vec<&str>>();
-        let output = output[1].trim();
-        output.to_string()
+        if cpu.is_none() {
+            "".to_string()
+        } else {
+            cpu.unwrap().brand().to_string()
+        }
     }
 
     fn get_cpu_architecture() -> CPUArchitecture {

@@ -1,4 +1,4 @@
-use crate::soc::{Soc, SocCollection};
+use crate::soc::Soc;
 use crate::SocDetails;
 use std::process::Command;
 

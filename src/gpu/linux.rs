@@ -1,7 +1,6 @@
 use crate::gpu::{GPUData, GPUUsage};
-use std::{fs::read, process::Command};
+use std::process::Command;
 
-use adlx::helper::AdlxHelper;
 use nvml_wrapper::Nvml;
 
 impl GPUUsage {

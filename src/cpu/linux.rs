@@ -14,7 +14,6 @@ impl CPUUsage {
     }
 
     fn get_name() -> String {
-        
         let output = Command::new("sh")
             .arg("-c")
             .arg("lscpu | grep 'Model name' | awk -F: '{print $2}'")
@@ -27,7 +26,7 @@ impl CPUUsage {
     pub fn num_of_cores() -> u32 {
         match sys_info::cpu_num() {
             Ok(num) => num,
-            Err(_) =>  1, // default to 1 core
+            Err(_) => 1, // default to 1 core
         }
     }
 
@@ -39,7 +38,6 @@ impl CPUUsage {
     }
 
     fn get_architecture() -> CPUArchitecture {
-        
         let arch = std::env::consts::ARCH.to_string();
 
         match arch.trim() {
@@ -47,7 +45,7 @@ impl CPUUsage {
             "x86_64" => CPUArchitecture::X86_64,
             "riscv32" => CPUArchitecture::RiscV32,
             "riscv64" => CPUArchitecture::RiscV64,
-            "arm" => CPUArchitecture::Arm, 
+            "arm" => CPUArchitecture::Arm,
             "arm64" => CPUArchitecture::Arm64,
             "aarch64" => CPUArchitecture::Arm64, // aarch64 is shown on linux systems
             _ => CPUArchitecture::Unknown,

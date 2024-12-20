@@ -1,5 +1,4 @@
 use crate::npu::{NPUData, NPUUsage};
-use crate::soc::SocDetails;
 use std::process::Command;
 
 impl NPUUsage {
