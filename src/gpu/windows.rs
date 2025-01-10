@@ -1,7 +1,5 @@
 use crate::gpu::{GPUData, GPUUsage};
 
-use adlx::ffi::ADLX_GPU_TYPE_GPUTYPE_DISCRETE;
-use adlx::helper::AdlxHelper;
 use anyhow::Result;
 use nvml_wrapper::Nvml;
 use std::ptr;
@@ -87,38 +85,18 @@ impl GPUUsage {
 
         if gpu_desc_list.iter().any(|x| x.VendorId == 4098) {
             // if we have amd gpu
-            // use adlx to get the gpu info
-            let adlx_helper = AdlxHelper::new()?;
-            let gpus = adlx_helper.system().gpus()?;
-            let pms = adlx_helper.system().performance_monitoring_services()?;
+            let desc = gpu_desc_list.iter().find(|x| x.VendorId == 4098).unwrap();
 
-            for gpu in gpus.iter() {
-                // skipping integrated gpu for now
-                if gpu.type_().unwrap() == ADLX_GPU_TYPE_GPUTYPE_DISCRETE {
-                    let dedicated = GPUData::new_with_values(
-                        gpu.name()?.to_string(),
-                        "Radeon".to_string(),
-                        gpu.total_vram()? as u64,
-                        pms.current_gpu_metrics(&gpu)?.vram()? as u64,
-                        gpu.total_vram()? as u64 - pms.current_gpu_metrics(&gpu)?.vram()? as u64,
-                        false,
-                    );
-                    results.push(dedicated);
-                }
-                //else {
+            let result = GPUData::new_with_values(
+                "AMD".to_string(),
+                "Radeon".to_string(),
+                (desc.SharedSystemMemory) as u64,
+                (desc.DedicatedVideoMemory) as u64,
+                (desc.SharedSystemMemory) as u64 - (desc.DedicatedVideoMemory) as u64,
+                false, // todo: check if its a integrated gpu or dedicated one
+            );
 
-                //     let desc = gpu_desc_list.iter().find(|x| x.VendorId == 4098).unwrap();
-                //
-                //     let result = GPUData::new_with_values(
-                //         gpu1.name()?.to_string(),
-                //         gpu1.asic_family_type()?.to_string(),
-                //         (desc.SharedSystemMemory) as u64,
-                //         (desc.DedicatedVideoMemory) as u64,
-                //         (desc.SharedSystemMemory) as u64 - (desc.DedicatedVideoMemory) as u64,
-                //         true,
-                //     );
-                //}
-            }
+            results.push(result);
         }
 
         if gpu_desc_list.iter().any(|x| x.VendorId == 32902) {
