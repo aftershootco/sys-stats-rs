@@ -14,6 +14,7 @@ impl GPUUsage {
             total_memory: 0,
             used_memory: 0,
             free_memory: 0,
+            adapter_index: 0,
         };
 
         let gpus: Vec<(String, String)> = Self::get_gpu_from_lspci();

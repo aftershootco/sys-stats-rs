@@ -4,13 +4,12 @@ use anyhow::Result;
 use nvml_wrapper::Nvml;
 use std::ptr;
 use winapi::shared::winerror::FAILED;
-
 use winapi::shared::dxgi::*;
 
 impl GPUUsage {
     // get the list of gpus in the system, using the windows api
-    fn get_dxgi_list() -> Vec<DXGI_ADAPTER_DESC> {
-        let mut desc_list: Vec<DXGI_ADAPTER_DESC> = vec![];
+    fn get_dxgi_list() -> Vec<(DXGI_ADAPTER_DESC, u32)> {
+        let mut desc_list: Vec<(DXGI_ADAPTER_DESC, u32)> = vec![];
 
         unsafe {
             let mut factory: *mut IDXGIFactory1 = ptr::null_mut();
@@ -28,13 +27,14 @@ impl GPUUsage {
                 if FAILED(hr) {
                     break;
                 }
+
                 let mut desc: DXGI_ADAPTER_DESC = std::mem::zeroed();
                 let hr = (*adapter).GetDesc(&mut desc);
                 if FAILED(hr) {
                     break;
                 }
 
-                desc_list.push(desc);
+                desc_list.push((desc, i));
                 i += 1;
             }
         }
@@ -61,13 +61,12 @@ impl GPUUsage {
         // vendor id qualcomm : 23170
 
         // if we have nvidia gpu
-        if gpu_desc_list.iter().any(|x| x.VendorId == 4318) {
+        if let Some(nvidia_gpu) = gpu_desc_list.iter().find(|x| x.0.VendorId == 4318) {
             let nvml = Nvml::init()?;
             let nv_gpu_count = nvml.device_count()?;
 
             if nv_gpu_count > 0 {
                 let device = nvml.device_by_index(0)?;
-
                 let memory_info = device.memory_info()?;
 
                 let result = GPUData::new_with_values(
@@ -77,56 +76,60 @@ impl GPUUsage {
                     memory_info.free,
                     memory_info.used,
                     false,
+                    nvidia_gpu.1  // Now we can use the found GPU's information
                 );
 
                 results.push(result);
             }
         }
 
-        if gpu_desc_list.iter().any(|x| x.VendorId == 4098) {
+        if gpu_desc_list.iter().any(|x| x.0.VendorId == 4098) {
             // if we have amd gpu
-            let desc = gpu_desc_list.iter().find(|x| x.VendorId == 4098).unwrap();
+            let desc = gpu_desc_list.iter().find(|x| x.0.VendorId == 4098).unwrap();
 
             let result = GPUData::new_with_values(
                 "AMD".to_string(),
                 "Radeon".to_string(),
-                (desc.SharedSystemMemory) as u64,
-                (desc.DedicatedVideoMemory) as u64,
-                (desc.SharedSystemMemory) as u64 - (desc.DedicatedVideoMemory) as u64,
+                desc.0.SharedSystemMemory as u64,
+                desc.0.DedicatedVideoMemory as u64,
+                (desc.0.SharedSystemMemory) as u64 - (desc.0.DedicatedVideoMemory) as u64,
                 false, // todo: check if its a integrated gpu or dedicated one
+                 desc.1
             );
 
             results.push(result);
         }
 
-        if gpu_desc_list.iter().any(|x| x.VendorId == 32902) {
+        if gpu_desc_list.iter().any(|x| x.0.VendorId == 32902) {
             // if we have intel gpu
             // todo: get the correct Data using intel api
-            let desc = gpu_desc_list.iter().find(|x| x.VendorId == 32902).unwrap();
+            let desc = gpu_desc_list.iter().find(|x| x.0.VendorId == 32902).unwrap();
 
             let result = GPUData::new_with_values(
                 "Intel".to_string(),
                 "Integrated or Arc".to_string(),
-                (desc.SharedSystemMemory) as u64,
-                (desc.DedicatedVideoMemory) as u64,
-                (desc.SharedSystemMemory) as u64 - (desc.DedicatedVideoMemory) as u64,
-                true,
+                (desc.0.SharedSystemMemory) as u64,
+                (desc.0.DedicatedVideoMemory) as u64,
+                (desc.0.SharedSystemMemory) as u64 - (desc.0.DedicatedVideoMemory) as u64,
+                false,
+                desc.1
             );
 
             results.push(result);
         }
 
-        if gpu_desc_list.iter().any(|x| x.VendorId == 23170) {
+        if gpu_desc_list.iter().any(|x| x.0.VendorId == 23170) {
             // if we have qualcomm gpu
-            let desc = gpu_desc_list.iter().find(|x| x.VendorId == 23170).unwrap();
+            let desc = gpu_desc_list.iter().find(|x| x.0.VendorId == 23170).unwrap();
 
             let result = GPUData::new_with_values(
                 "Qualcomm".to_string(),
                 "Adreno".to_string(),
-                (desc.SharedSystemMemory) as u64,
-                (desc.DedicatedVideoMemory) as u64,
-                (desc.SharedSystemMemory) as u64 - (desc.DedicatedVideoMemory) as u64,
+                (desc.0.SharedSystemMemory) as u64,
+                (desc.0.DedicatedVideoMemory) as u64,
+                (desc.0.SharedSystemMemory) as u64 - (desc.0.DedicatedVideoMemory) as u64,
                 true,
+                desc.1
             );
 
             results.push(result);

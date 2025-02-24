@@ -35,16 +35,16 @@ fn main() {
         }
     }
 
-    match NPUStats::get_npu_info() {
-        Ok(info) => {
-            println!("----------------------");
-            println!("{:#?}", info);
-            println!("----------------------");
-        }
-        Err(e) => {
-            eprintln!("Failed to get NPU info: {:?}", e);
-        }
-    }
+    // match NPUStats::get_npu_info() {
+    //     Ok(info) => {
+    //         println!("----------------------");
+    //         println!("{:#?}", info);
+    //         println!("----------------------");
+    //     }
+    //     Err(e) => {
+    //         eprintln!("Failed to get NPU info: {:?}", e);
+    //     }
+    // }
 
     let socs = SocDetails::get_current_soc_info();
     println!("----------------------");

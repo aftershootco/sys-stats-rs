@@ -17,6 +17,7 @@ pub struct GPUData {
     /// Used memory also includes cpu memory, in unified memory systems
     pub used_memory: u64,
     pub has_unified_memory: bool,
+    pub adapter_index: u32,
 }
 
 impl GPUData {
@@ -28,6 +29,7 @@ impl GPUData {
             free_memory: 0,
             used_memory: 0,
             has_unified_memory: false,
+            adapter_index: 0,
         }
     }
 
@@ -38,6 +40,7 @@ impl GPUData {
         free_memory: u64,
         used_memory: u64,
         has_unified_memory: bool,
+        adapter_index: u32,
     ) -> Self {
         Self {
             name,
@@ -46,6 +49,7 @@ impl GPUData {
             free_memory,
             used_memory,
             has_unified_memory,
+            adapter_index,
         }
     }
 }
