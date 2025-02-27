@@ -20,7 +20,7 @@ pub struct DriverVersionData {
 pub struct GPUData {
     pub name: String,
     pub architecture: String,
-    vendor_id: u32,
+    pub vendor_id: u32,
     pub total_memory: u64,
     pub free_memory: u64,
     /// Used memory also includes cpu memory, in unified memory systems
