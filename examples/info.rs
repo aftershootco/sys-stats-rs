@@ -1,7 +1,17 @@
 use sys_stats::SocDetails;
-use sys_stats::{CPUStats, GPUStats, MemoryStats, NPUStats};
+use sys_stats::{CPUStats, GPUStats, MemoryStats};
 
 fn main() {
+
+    let gpu_data = GPUStats::get_gpus_list();
+
+    if let Ok(data) = gpu_data {
+        println!("----------------------");
+        println!("{:#?}", data);
+        println!("----------------------");
+    }
+
+
     match GPUStats::get_gpu_info() {
         Ok(info) => {
             println!("----------------------");
@@ -35,16 +45,6 @@ fn main() {
         }
     }
 
-    // match NPUStats::get_npu_info() {
-    //     Ok(info) => {
-    //         println!("----------------------");
-    //         println!("{:#?}", info);
-    //         println!("----------------------");
-    //     }
-    //     Err(e) => {
-    //         eprintln!("Failed to get NPU info: {:?}", e);
-    //     }
-    // }
 
     let socs = SocDetails::get_current_soc_info();
     println!("----------------------");

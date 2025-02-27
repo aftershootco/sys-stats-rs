@@ -9,6 +9,14 @@ mod linux;
 pub struct GPUUsage;
 
 #[derive(Debug, Clone)]
+pub struct DriverVersionData {
+    pub major: u64,
+    pub minor: u64,
+    pub build: u64,
+    pub revision: u64,
+}
+
+#[derive(Debug, Clone)]
 pub struct GPUData {
     pub name: String,
     pub architecture: String,
@@ -17,7 +25,9 @@ pub struct GPUData {
     /// Used memory also includes cpu memory, in unified memory systems
     pub used_memory: u64,
     pub has_unified_memory: bool,
+    pub is_integrated: bool,
     pub adapter_index: u32,
+    pub driver_version: DriverVersionData,
 }
 
 impl GPUData {
@@ -29,7 +39,14 @@ impl GPUData {
             free_memory: 0,
             used_memory: 0,
             has_unified_memory: false,
+            is_integrated:false,
             adapter_index: 0,
+            driver_version: DriverVersionData {
+                major: 0,
+                minor: 0,
+                build: 0,
+                revision: 0,
+            },
         }
     }
 
@@ -40,7 +57,9 @@ impl GPUData {
         free_memory: u64,
         used_memory: u64,
         has_unified_memory: bool,
+        is_integrated: bool,
         adapter_index: u32,
+        driver_version: DriverVersionData,
     ) -> Self {
         Self {
             name,
@@ -49,7 +68,9 @@ impl GPUData {
             free_memory,
             used_memory,
             has_unified_memory,
+            is_integrated,
             adapter_index,
+            driver_version,
         }
     }
 }
