@@ -1,4 +1,4 @@
-use crate::gpu::{GPUData, GPUUsage};
+use crate::gpu::{DriverVersionData, GPUData, GPUUsage};
 use objc2::msg_send;
 use objc2_metal::{MTLCreateSystemDefaultDevice, MTLDevice};
 use os_version::OsVersion;
@@ -12,10 +12,19 @@ impl GPUUsage {
         let mut result: GPUData = GPUData {
             name: "".to_string(),
             architecture: "".to_string(),
-            has_unified_memory: false,
+            vendor_id: 0,
             total_memory: 0,
-            used_memory: 0,
             free_memory: 0,
+            used_memory: 0,
+            has_unified_memory: false,
+            is_integrated:false,
+            adapter_index: 0,
+            driver_version: DriverVersionData {
+                major: 0,
+                minor: 0,
+                build: 0,
+                revision: 0,
+            },
         };
 
         unsafe {
@@ -46,6 +55,13 @@ impl GPUUsage {
             } else {
                 result.architecture = "Unknown".to_string()
             };
+
+            if std::env::consts::ARCH == "aarch64" {
+                result.vendor_id = 4203;
+                result.has_unified_memory = true;
+                result.is_integrated = true;
+            }
+            
 
             // handling memory calculations separately, because apple does not provide a direct way to get the free/used gpu memory
             result.total_memory = Self::total_gpu_memory()?;

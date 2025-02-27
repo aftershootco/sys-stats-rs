@@ -20,6 +20,7 @@ pub struct DriverVersionData {
 pub struct GPUData {
     pub name: String,
     pub architecture: String,
+    vendor_id: u32,
     pub total_memory: u64,
     pub free_memory: u64,
     /// Used memory also includes cpu memory, in unified memory systems
@@ -35,6 +36,7 @@ impl GPUData {
         Self {
             name: "".to_string(),
             architecture: "".to_string(),
+            vendor_id: 0,
             total_memory: 0,
             free_memory: 0,
             used_memory: 0,
@@ -53,6 +55,7 @@ impl GPUData {
     pub fn new_with_values(
         name: String,
         architecture: String,
+        vendor_id: u32,
         total_memory: u64,
         free_memory: u64,
         used_memory: u64,
@@ -64,6 +67,7 @@ impl GPUData {
         Self {
             name,
             architecture,
+            vendor_id,
             total_memory,
             free_memory,
             used_memory,

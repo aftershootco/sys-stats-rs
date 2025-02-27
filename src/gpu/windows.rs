@@ -158,6 +158,17 @@ impl GPUUsage {
                     let revision = version & 0xFFFF;
 
                     let mut current_gpu_data = GPUData::new();
+                    
+                    current_gpu_data.vendor_id = hardware_id.vendorID;
+                    current_gpu_data.has_unified_memory = is_integrated;
+                    current_gpu_data.is_integrated = is_integrated;
+                    current_gpu_data.adapter_index = i;
+                    current_gpu_data.driver_version = DriverVersionData{
+                        major,
+                        minor,
+                        build,
+                        revision,
+                    };
 
                     // if nvidia
                     if hardware_id.vendorID == 0x10DE {
@@ -173,16 +184,6 @@ impl GPUUsage {
                             current_gpu_data.total_memory = memory_info.total;
                             current_gpu_data.free_memory = memory_info.free;
                             current_gpu_data.used_memory = memory_info.used;
-                            current_gpu_data.has_unified_memory = is_integrated;
-                            current_gpu_data.is_integrated = is_integrated;
-                            current_gpu_data.adapter_index = i;
-                            current_gpu_data.driver_version = DriverVersionData{
-                                major,
-                                minor,
-                                build,
-                                revision,
-                            };
-
                         }
                     }else {
 
@@ -198,15 +199,6 @@ impl GPUUsage {
                         current_gpu_data.total_memory = memory_size as u64;
                         current_gpu_data.free_memory = memory_budget.availableForReservation;
                         current_gpu_data.used_memory = memory_budget.budget - memory_budget.availableForReservation;
-                        current_gpu_data.has_unified_memory = is_integrated;
-                        current_gpu_data.is_integrated = is_integrated;
-                        current_gpu_data.adapter_index = i;
-                        current_gpu_data.driver_version = DriverVersionData{
-                            major,
-                            minor,
-                            build,
-                            revision,
-                        }
                     }
 
                     if current_gpu_data.total_memory > 0 {
