@@ -1,11 +1,7 @@
 [package]
 name = "sys-stats"
-version = "0.3.4"
+version = "0.3.5"
 edition = "2021"
-
-[features]
-default = []
-# openvino = []
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.5.2"
