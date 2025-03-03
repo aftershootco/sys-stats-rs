@@ -49,10 +49,7 @@ impl GPUUsage {
             let d3d12_core_compute_adapters: IDXCoreAdapterList =
                 adapter_factory.CreateAdapterList(&attributes)?;
 
-
             let count = d3d12_core_compute_adapters.GetAdapterCount();
-
-            println!("{:?}", count);
 
             for i in 0..count {
                 let adapter: IDXCoreAdapter = d3d12_core_compute_adapters.GetAdapter(i)?;
@@ -99,18 +96,7 @@ impl GPUUsage {
                         &mut memory_budget as *mut _ as *mut core::ffi::c_void
                     )?;
 
-                    // Is this Integrated GPU?
-                    let mut integrated_buffer = [0u8; std::mem::size_of::<u32>()];
-
-                    adapter.GetProperty(
-                        IsIntegrated,
-                        std::mem::size_of::<u32>(),  // Specify the buffer size explicitly
-                        integrated_buffer.as_mut_ptr() as *mut core::ffi::c_void
-                    )?;
-
-                    let is_integrated = u32::from_ne_bytes(integrated_buffer);
-                    let is_integrated = is_integrated != 0;
-
+                    let is_integrated = is_integrated_gpu(&adapter)?;
 
                     // get hardware id
                     let mut hardware_id_buffer = [0u8; std::mem::size_of::<DXCoreHardwareID>()];
@@ -209,7 +195,19 @@ impl GPUUsage {
             }
         }
 
-        gpus_data.sort_by(|a, b| b.total_memory.cmp(&a.total_memory));
+
+        // Sort the GPUs
+        gpus_data.sort_by(|a, b| {
+            match (a.is_high_memory_dedicated(), b.is_high_memory_dedicated()) {
+                // If both are high memory dedicated or both are not, keep original order
+                (true, true) | (false, false) => std::cmp::Ordering::Equal,
+                // If a is high memory dedicated but b is not, a comes first
+                (true, false) => std::cmp::Ordering::Less,
+                // If b is high memory dedicated but a is not, b comes first
+                (false, true) => std::cmp::Ordering::Greater,
+            }
+        });
+
         Ok(gpus_data)
     }
 
@@ -253,3 +251,43 @@ impl GPUUsage {
             .unwrap_or(false)
     }
 }
+
+fn is_integrated_gpu(adapter: &IDXCoreAdapter) -> std::result::Result<bool, Box<dyn std::error::Error>> {
+    let mut integrated_buffer = [0u8; std::mem::size_of::<u32>()];
+
+    unsafe {
+        // Check IsIntegrated property
+        if let Ok(_) = adapter.GetProperty(
+            IsIntegrated,
+            std::mem::size_of::<u32>(),
+            integrated_buffer.as_mut_ptr() as *mut core::ffi::c_void
+        ) {
+            if integrated_buffer != [0, 0, 0, 0] {
+                return Ok(true);
+            }
+        }
+
+
+        // Get the description size
+        let desc_size = adapter.GetPropertySize(DriverDescription)?;
+        let mut desc_buffer = vec![0u8; desc_size];
+
+        adapter.GetProperty(
+            DriverDescription,
+            desc_size,
+            desc_buffer.as_mut_ptr() as *mut core::ffi::c_void
+        )?;
+
+        let gpu_name = String::from_utf8_lossy(&desc_buffer)
+            .trim_end_matches('\0')
+            .to_string();
+
+
+        // Check common integrated GPU patterns
+        return Ok(gpu_name.contains("amd radeon(tm) graphics") ||
+            gpu_name.contains("AMD Radeon(TM) Graphics") ||
+            gpu_name.contains("ryzen") ||
+            gpu_name.contains("uhd graphics"));
+    }
+}
+
