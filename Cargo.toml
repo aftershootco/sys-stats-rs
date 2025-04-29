@@ -1,15 +1,12 @@
 [package]
 name = "sys-stats"
-version = "0.3.4"
+version = "0.3.5"
 edition = "2021"
-
-[features]
-default = []
-# openvino = []
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.5.2"
 objc2-metal = { version = "0.2.2", features = ["MTLDevice"] }
+os-version = "0.2.0"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 winapi = { version = "0.3.9", features = ["sysinfoapi"] }
@@ -27,4 +24,3 @@ nvml-wrapper = "0.10.0"
 sys-info = "0.9.1" # TODO, remove this and use sysinfo instead
 serde = { version = "1.0.215", features = ["derive"] }
 serde_json = "1.0.133"
-os-version = "0.2.0"

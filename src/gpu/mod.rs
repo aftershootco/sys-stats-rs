@@ -77,4 +77,9 @@ impl GPUData {
             driver_version,
         }
     }
+    pub fn is_high_memory_dedicated(&self) -> bool {
+        // Consider GPU as high memory if it has 4GB (4 * 1024 * 1024 * 1024 bytes) or more
+        let four_gb = 4 * 1024 * 1024 * 1024;
+        !self.is_integrated && self.total_memory >= four_gb
+    }
 }
