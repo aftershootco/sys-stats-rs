@@ -15,6 +15,14 @@ impl GPUUsage {
             used_memory: 0,
             free_memory: 0,
             adapter_index: 0,
+            vendor_id: 0,
+            is_integrated: false,
+            driver_version: DriverVersionData {
+                major: 0,
+                minor: 0,
+                build: 0,
+                revision: 0,
+            },
         };
 
         let gpus: Vec<(String, String)> = Self::get_gpu_from_lspci();
@@ -84,6 +92,15 @@ impl GPUUsage {
             total_memory: 0,
             used_memory: 0,
             free_memory: 0,
+            adapter_index: 0,
+            vendor_id: 0,
+            is_integrated: false,
+            driver_version: DriverVersionData {
+                major: 0,
+                minor: 0,
+                build: 0,
+                revision: 0,
+            },
         };
 
         let nvml = Nvml::init()?;
