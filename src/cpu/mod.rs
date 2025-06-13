@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 #[cfg(target_os = "macos")]
 mod macos;
 #[cfg(target_os = "windows")]
@@ -8,7 +10,7 @@ mod linux;
 
 pub struct CPUUsage;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct CPUData {
     pub name: String,
     pub architecture: CPUArchitecture,
@@ -16,7 +18,7 @@ pub struct CPUData {
     pub average_cpu_usage: f32,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum CPUArchitecture {
     Arm,
     Arm64,

@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 #[cfg(target_os = "macos")]
 mod macos;
 
@@ -9,7 +11,7 @@ mod linux;
 
 pub struct MemoryUsage;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MemoryData {
     pub total: u64,
     pub free: u64,

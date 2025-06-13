@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 #[cfg(target_os = "macos")]
 mod macos;
 #[cfg(target_os = "windows")]
@@ -8,7 +10,7 @@ mod linux;
 
 pub struct GPUUsage;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DriverVersionData {
     pub major: u64,
     pub minor: u64,
@@ -16,7 +18,7 @@ pub struct DriverVersionData {
     pub revision: u64,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GPUData {
     pub name: String,
     pub architecture: String,
@@ -41,7 +43,7 @@ impl GPUData {
             free_memory: 0,
             used_memory: 0,
             has_unified_memory: false,
-            is_integrated:false,
+            is_integrated: false,
             adapter_index: 0,
             driver_version: DriverVersionData {
                 major: 0,
@@ -83,3 +85,4 @@ impl GPUData {
         !self.is_integrated && self.total_memory >= four_gb
     }
 }
+
