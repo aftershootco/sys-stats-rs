@@ -10,13 +10,13 @@ impl GPUUsage {
         let mut result: GPUData = GPUData {
             name: "".to_string(),
             architecture: "".to_string(),
-            has_unified_memory: false,
-            total_memory: 0,
-            used_memory: 0,
-            free_memory: 0,
-            adapter_index: 0,
             vendor_id: 0,
+            total_memory: 0,
+            free_memory: 0,
+            used_memory: 0,
+            has_unified_memory: false,
             is_integrated: false,
+            adapter_index: 0,
             driver_version: DriverVersionData {
                 major: 0,
                 minor: 0,
@@ -25,14 +25,14 @@ impl GPUUsage {
             },
         };
 
-        let gpus: Vec<(String, String)> = Self::get_gpu_from_lspci();
+        let gpus: Vec<(String, String)> = dbg!(Self::get_gpu_from_lspci());
 
         gpus.iter().for_each(|gpu| {
-            if gpu.0.contains("NVIDIA") || gpu.0.contains("nvidia") || gpu.0.contains("Nvidia") {
+            if gpu.1.contains("NVIDIA") || gpu.1.contains("nvidia") || gpu.1.contains("Nvidia") {
                 result = Self::get_nvidia_details().unwrap();
-            } else if gpu.0.contains("AMD") || gpu.0.contains("amd") || gpu.0.contains("AMD") {
+            } else if gpu.1.contains("AMD") || gpu.1.contains("amd") || gpu.1.contains("AMD") {
                 println!("AMD GPU found");
-            } else if gpu.0.contains("Intel") || gpu.0.contains("intel") || gpu.0.contains("INTEL")
+            } else if gpu.1.contains("Intel") || gpu.1.contains("intel") || gpu.1.contains("INTEL")
             {
                 println!("Intel GPU found");
                 result.name = gpu.1.clone();
@@ -110,6 +110,13 @@ impl GPUUsage {
 
         let nvml = Nvml::init()?;
 
+        let version_info = nvml
+            .sys_driver_version()?
+            .split('.')
+            .map(|x| x.parse::<u64>().expect("Cannot parse version info"))
+            .take(2)
+            .collect::<Vec<u64>>();
+
         let device = nvml.device_by_index(0)?;
 
         ret.name = device.name()?;
@@ -118,6 +125,8 @@ impl GPUUsage {
         ret.total_memory = device.memory_info()?.total;
         ret.used_memory = device.memory_info()?.used;
         ret.free_memory = device.memory_info()?.free;
+        ret.driver_version.major = version_info[0];
+        ret.driver_version.minor = version_info[1];
 
         Ok(ret)
     }
