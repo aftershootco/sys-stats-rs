@@ -1,4 +1,4 @@
-use crate::gpu::{DriverVersionData, GPUData, GPUUsage};
+use crate::gpu::{DriverVersionData, GPUData, GPUUsage, AdapterData};
 use objc2::msg_send;
 use objc2_metal::{MTLCreateSystemDefaultDevice, MTLDevice};
 use os_version::OsVersion;
@@ -17,7 +17,7 @@ impl GPUUsage {
             free_memory: 0,
             used_memory: 0,
             has_unified_memory: false,
-            is_integrated:false,
+            is_integrated: false,
             adapter_index: 0,
             driver_version: DriverVersionData {
                 major: 0,
@@ -61,7 +61,6 @@ impl GPUUsage {
                 result.has_unified_memory = true;
                 result.is_integrated = true;
             }
-            
 
             // handling memory calculations separately, because apple does not provide a direct way to get the free/used gpu memory
             result.total_memory = Self::total_gpu_memory()?;
@@ -71,6 +70,11 @@ impl GPUUsage {
             result.has_unified_memory = Self::has_unified_memory().unwrap()
         }
         Ok(result)
+    }
+
+    pub fn get_all_adapters_list() -> Result<Vec<AdapterData>, Box<dyn std::error::Error>> {
+        println!("get_all_adapters_list not implemented for macOS");
+        Ok(Vec::new())
     }
 
     pub fn get_gpus_list() -> Result<Vec<GPUData>, Box<dyn std::error::Error>> {

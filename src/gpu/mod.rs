@@ -19,6 +19,19 @@ pub struct DriverVersionData {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AdapterData {
+    pub name: String,
+    pub vendor_id: u32,
+    pub device_id: u32,
+    pub is_hardware: bool,
+    pub is_integrated: bool,
+    pub adapter_index: u32,
+    pub driver_version: DriverVersionData,
+    pub total_memory: u64,
+    pub architecture: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GPUData {
     pub name: String,
     pub architecture: String,
@@ -31,6 +44,27 @@ pub struct GPUData {
     pub is_integrated: bool,
     pub adapter_index: u32,
     pub driver_version: DriverVersionData,
+}
+
+impl AdapterData {
+    pub fn new() -> Self {
+        Self {
+            name: "".to_string(),
+            vendor_id: 0,
+            device_id: 0,
+            is_hardware: false,
+            is_integrated: false,
+            adapter_index: 0,
+            driver_version: DriverVersionData {
+                major: 0,
+                minor: 0,
+                build: 0,
+                revision: 0,
+            },
+            total_memory: 0,
+            architecture: "".to_string(),
+        }
+    }
 }
 
 impl GPUData {
@@ -85,4 +119,3 @@ impl GPUData {
         !self.is_integrated && self.total_memory >= four_gb
     }
 }
-

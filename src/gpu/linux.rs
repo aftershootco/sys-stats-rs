@@ -1,4 +1,4 @@
-use crate::gpu::{DriverVersionData, GPUData, GPUUsage};
+use crate::gpu::{DriverVersionData, GPUData, GPUUsage, AdapterData};
 use std::process::Command;
 
 use nvml_wrapper::Nvml;
@@ -40,6 +40,11 @@ impl GPUUsage {
         });
 
         Ok(result)
+    }
+
+    pub fn get_all_adapters_list() -> Result<Vec<AdapterData>, Box<dyn std::error::Error>> {
+        println!("get_all_adapters_list not implemented for Linux");
+        Ok(Vec::new())
     }
 
     pub fn get_gpus_list() -> Result<Vec<GPUData>, Box<dyn std::error::Error>> {
