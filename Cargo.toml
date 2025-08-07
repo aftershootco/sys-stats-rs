@@ -10,7 +10,7 @@ os-version = "0.2.0"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 winapi = { version = "0.3.9", features = ["sysinfoapi"] }
-nvml-wrapper = "0.10.0"
+nvml-wrapper = "0.11.0"
 anyhow = "1.0.82"
 windows = { version = "0.58.0", features = [
     "Win32_Graphics_DXCore",
@@ -18,7 +18,7 @@ windows = { version = "0.58.0", features = [
 sysinfo = "0.33.0"
 
 [target.'cfg(target_os = "linux")'.dependencies]
-nvml-wrapper = "0.10.0"
+nvml-wrapper = "0.11.0"
 
 [dependencies]
 sys-info = "0.9.1" # TODO, remove this and use sysinfo instead
