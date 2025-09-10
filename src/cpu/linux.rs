@@ -1,12 +1,14 @@
 use crate::cpu::{CPUData, CPUUsage};
+use sysinfo::{CpuRefreshKind, RefreshKind, System};
 use std::process::Command;
 
-use super::CPUArchitecture;
+use super::{CPUArchitecture, CPUVendor};
 
 impl CPUUsage {
     pub fn get_cpu_info() -> Result<CPUData, Box<dyn std::error::Error>> {
         Ok(CPUData {
-            name: Self::get_name(),
+            name: Self::get_name(), 
+            vendor: Self::get_cpu_vendor(),
             architecture: Self::get_architecture(),
             num_of_cores: Self::num_of_cores(),
             average_cpu_usage: Self::average_usage(),
@@ -21,6 +23,15 @@ impl CPUUsage {
             .expect("Failed to execute command");
 
         String::from_utf8_lossy(&output.stdout).trim().to_string()
+    }
+
+    fn get_cpu_vendor() -> CPUVendor {
+        let s = System::new_with_specifics(
+            RefreshKind::nothing().with_cpu(CpuRefreshKind::everything()),
+        );
+
+        let vendor_id = s.cpus().get(0).unwrap().vendor_id();
+        CPUVendor::from_vendor_id(vendor_id)
     }
 
     pub fn num_of_cores() -> u32 {
