@@ -1,6 +1,6 @@
 use crate::cpu::{CPUData, CPUUsage};
-use sysinfo::{CpuRefreshKind, RefreshKind, System};
 use std::process::Command;
+use sysinfo::{CpuRefreshKind, RefreshKind, System};
 
 use super::{CPUArchitecture, CPUVendor};
 
@@ -15,58 +15,59 @@ impl CPUUsage {
         })
     }
 
-    fn get_name() -> String {
-        let output = Command::new("sh")
-            .arg("-c")
-            .arg("sysctl -n machdep.cpu.brand_string")
+    /// Helper function to get sysctl values
+    fn get_sysctl_value(key: &str) -> Option<String> {
+        Command::new("sysctl")
+            .arg("-n")
+            .arg(key)
             .output()
-            .expect("Failed to execute command");
+            .ok()
+            .map(|output| String::from_utf8_lossy(&output.stdout).trim().to_string())
+    }
 
-        let name = String::from_utf8_lossy(&output.stdout);
-        name.trim().to_string()
+    fn get_name() -> String {
+        Self::get_sysctl_value("machdep.cpu.brand_string")
+            .unwrap_or_else(|| "Unknown CPU".to_string())
     }
 
     fn get_cpu_vendor() -> CPUVendor {
-        let s = System::new_with_specifics(
+        // Check if running under Rosetta2 first (Intel code on Apple Silicon)
+        if Self::is_rosetta2() {
+            return CPUVendor::Rosetta2;
+        }
+
+        // Get CPU brand string to check for Apple Silicon
+        let cpu_brand = Self::get_sysctl_value("machdep.cpu.brand_string").unwrap_or_default();
+
+        if cpu_brand.contains("Apple") {
+            return CPUVendor::Apple;
+        }
+
+        // Get vendor ID from sysinfo for other cases
+        let system = System::new_with_specifics(
             RefreshKind::nothing().with_cpu(CpuRefreshKind::everything()),
         );
 
-        let vendor_id = s.cpus().get(0).unwrap().vendor_id();
-        
-        // Special handling for Apple Silicon and Rosetta2 on macOS
-        if vendor_id.is_empty() || vendor_id == "Apple" {
-            // Check if this is Apple Silicon
-            if let Ok(output) = Command::new("sysctl")
-                .arg("-n")
-                .arg("machdep.cpu.brand_string")
-                .output()
-            {
-                let brand = String::from_utf8_lossy(&output.stdout);
-                if brand.contains("Apple") {
-                    return CPUVendor::Apple;
-                }
+        if let Some(cpu) = system.cpus().first() {
+            let vendor_id = cpu.vendor_id();
+
+            // For native Intel hardware, return Intel
+            if vendor_id == "GenuineIntel" {
+                return CPUVendor::Intel;
             }
+
+            // Fallback to generic vendor mapping
+            CPUVendor::from_vendor_id(vendor_id)
+        } else {
+            CPUVendor::Other
         }
-        
-        // Check for Rosetta2 when vendor is Intel on macOS
-        if vendor_id == "GenuineIntel" && Self::is_rosetta2() {
-            return CPUVendor::Rosetta2;
-        }
-        
-        CPUVendor::from_vendor_id(vendor_id)
     }
 
     /// Helper function to detect if running under Apple Rosetta 2
     fn is_rosetta2() -> bool {
-        if let Ok(output) = Command::new("sysctl")
-            .arg("-n")
-            .arg("sysctl.proc_translated")
-            .output()
-        {
-            let result = String::from_utf8_lossy(&output.stdout);
-            return result.trim() == "1";
-        }
-        false
+        Self::get_sysctl_value("sysctl.proc_translated")
+            .map(|value| value == "1")
+            .unwrap_or(false)
     }
 
     pub fn num_of_cores() -> u32 {
@@ -78,18 +79,19 @@ impl CPUUsage {
     }
 
     fn get_architecture() -> CPUArchitecture {
-        let output = Command::new("sh")
-            .arg("-c")
-            .arg("uname -m")
+        Command::new("uname")
+            .arg("-m")
             .output()
-            .expect("Failed to execute command");
-
-        let name = String::from_utf8_lossy(&output.stdout);
-        match name.trim() {
-            "i386" => CPUArchitecture::I386,
-            "x86_64" => CPUArchitecture::X86_64,
-            "arm64" => CPUArchitecture::Arm64,
-            _ => CPUArchitecture::Unknown,
-        }
+            .ok()
+            .and_then(|output| {
+                let arch = String::from_utf8_lossy(&output.stdout);
+                match arch.trim() {
+                    "i386" => Some(CPUArchitecture::I386),
+                    "x86_64" => Some(CPUArchitecture::X86_64),
+                    "arm64" => Some(CPUArchitecture::Arm64),
+                    _ => None,
+                }
+            })
+            .unwrap_or(CPUArchitecture::Unknown)
     }
 }

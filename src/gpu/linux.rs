@@ -1,4 +1,4 @@
-use crate::gpu::{DriverVersionData, GPUData, GPUUsage, AdapterData};
+use crate::gpu::{AdapterData, DriverVersionData, GPUData, GPUUsage};
 use std::process::Command;
 
 use nvml_wrapper::Nvml;

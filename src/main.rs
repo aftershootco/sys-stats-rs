@@ -1,12 +1,11 @@
-use sys_stats::SocDetails;
-use sys_stats::{CPUStats, GPUStats, MemoryStats};
 use std::env;
 use std::io::{self, Write};
+use sys_stats::{CPUStats, GPUStats, MemoryStats};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
     let mut show_all_gpus = args.iter().any(|arg| arg == "--all");
-    
+
     // If no command line arguments provided, show interactive prompt
     if args.len() == 1 {
         println!("System Statistics Tool");
@@ -15,10 +14,10 @@ fn main() {
         println!("2. Show full info (all GPUs)");
         print!("Choose option (1 or 2): ");
         io::stdout().flush().unwrap();
-        
+
         let mut input = String::new();
         io::stdin().read_line(&mut input).unwrap();
-        
+
         match input.trim() {
             "1" => show_all_gpus = false,
             "2" => show_all_gpus = true,
@@ -93,7 +92,7 @@ fn main() {
                 }
             }
         }
-        
+
         // Show adapters list only when option 2 is selected
         match GPUStats::get_all_adapters_list() {
             Ok(info) => {

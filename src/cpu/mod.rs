@@ -48,7 +48,6 @@ impl CPUVendor {
     }
 }
 
-
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum CPUArchitecture {
     Arm,

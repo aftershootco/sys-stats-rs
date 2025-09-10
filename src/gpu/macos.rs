@@ -1,4 +1,4 @@
-use crate::gpu::{DriverVersionData, GPUData, GPUUsage, AdapterData};
+use crate::gpu::{AdapterData, DriverVersionData, GPUData, GPUUsage};
 use objc2::msg_send;
 use objc2_metal::{MTLCreateSystemDefaultDevice, MTLDevice};
 use os_version::OsVersion;
@@ -122,7 +122,7 @@ impl GPUUsage {
     pub fn current_gpu_memory_free() -> Result<u64, Box<dyn std::error::Error>> {
         let free_memory: u64;
 
-        unsafe {
+        {
             let mtl_device = MTLCreateSystemDefaultDevice();
 
             let mtl_device = match mtl_device.as_ref() {

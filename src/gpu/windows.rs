@@ -1,4 +1,4 @@
-use crate::gpu::{DriverVersionData, GPUData, GPUUsage, AdapterData};
+use crate::gpu::{AdapterData, DriverVersionData, GPUData, GPUUsage};
 
 use anyhow::Result;
 use nvml_wrapper::Nvml;
@@ -34,7 +34,8 @@ impl GPUUsage {
     }
 
     /// Get list of all adapters in the system (hardware and non-hardware)
-    pub fn get_all_adapters_list() -> std::result::Result<Vec<AdapterData>, Box<dyn std::error::Error>> {
+    pub fn get_all_adapters_list(
+    ) -> std::result::Result<Vec<AdapterData>, Box<dyn std::error::Error>> {
         let mut adapters_data: Vec<AdapterData> = Vec::new();
 
         unsafe {
@@ -100,7 +101,7 @@ impl GPUUsage {
                     std::mem::size_of::<DXCoreHardwareID>(),
                     hardware_id_buffer.as_mut_ptr() as *mut core::ffi::c_void,
                 )?;
-                
+
                 let hardware_id: DXCoreHardwareID =
                     std::ptr::read(hardware_id_buffer.as_ptr() as *const _);
 
@@ -289,22 +290,26 @@ impl GPUUsage {
                                                 match (name_result, arch_result, memory_result) {
                                                     (Ok(name), Ok(arch), Ok(memory_info)) => {
                                                         current_gpu_data.name = name;
-                                                        current_gpu_data.architecture = arch.to_string();
-                                                        current_gpu_data.total_memory = memory_info.total;
-                                                        current_gpu_data.free_memory = memory_info.free;
-                                                        current_gpu_data.used_memory = memory_info.used;
+                                                        current_gpu_data.architecture =
+                                                            arch.to_string();
+                                                        current_gpu_data.total_memory =
+                                                            memory_info.total;
+                                                        current_gpu_data.free_memory =
+                                                            memory_info.free;
+                                                        current_gpu_data.used_memory =
+                                                            memory_info.used;
                                                         true // NVML succeeded
                                                     }
-                                                    _ => false // NVML failed to get device info
+                                                    _ => false, // NVML failed to get device info
                                                 }
                                             }
-                                            Err(_) => false // Failed to get device
+                                            Err(_) => false, // Failed to get device
                                         }
                                     }
-                                    _ => false // No devices or failed to get count
+                                    _ => false, // No devices or failed to get count
                                 }
                             }
-                            Err(_) => false // NVML init failed
+                            Err(_) => false, // NVML init failed
                         };
 
                         // If NVML failed, fall back to basic information like other vendors
@@ -312,10 +317,11 @@ impl GPUUsage {
                             current_gpu_data.name = gpu_name;
                             current_gpu_data.architecture = "NVIDIA".to_string();
                             current_gpu_data.total_memory = memory_size as u64;
-                            
+
                             // Handle memory budget for fallback
                             if budget_result.is_ok() {
-                                current_gpu_data.free_memory = memory_budget.availableForReservation;
+                                current_gpu_data.free_memory =
+                                    memory_budget.availableForReservation;
                                 current_gpu_data.used_memory =
                                     memory_budget.budget - memory_budget.availableForReservation;
                             } else {
@@ -334,7 +340,7 @@ impl GPUUsage {
 
                         current_gpu_data.name = gpu_name;
                         current_gpu_data.total_memory = memory_size as u64;
-                        
+
                         // Handle memory budget for integrated GPUs
                         if budget_result.is_ok() {
                             current_gpu_data.free_memory = memory_budget.availableForReservation;

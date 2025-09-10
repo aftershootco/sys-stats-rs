@@ -1,13 +1,13 @@
 use crate::cpu::{CPUData, CPUUsage};
-use sysinfo::{CpuRefreshKind, RefreshKind, System};
 use std::process::Command;
+use sysinfo::{CpuRefreshKind, RefreshKind, System};
 
 use super::{CPUArchitecture, CPUVendor};
 
 impl CPUUsage {
     pub fn get_cpu_info() -> Result<CPUData, Box<dyn std::error::Error>> {
         Ok(CPUData {
-            name: Self::get_name(), 
+            name: Self::get_name(),
             vendor: Self::get_cpu_vendor(),
             architecture: Self::get_architecture(),
             num_of_cores: Self::num_of_cores(),
