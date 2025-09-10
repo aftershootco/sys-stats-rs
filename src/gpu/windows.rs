@@ -274,18 +274,54 @@ impl GPUUsage {
 
                     // if nvidia
                     if hardware_id.vendorID == 0x10DE {
-                        let nvml = Nvml::init()?;
-                        let nv_gpu_count = nvml.device_count()?;
+                        // Try to use NVML for detailed Nvidia GPU information
+                        let nvml_success = match Nvml::init() {
+                            Ok(nvml) => {
+                                match nvml.device_count() {
+                                    Ok(nv_gpu_count) if nv_gpu_count > 0 => {
+                                        match nvml.device_by_index(0) {
+                                            Ok(device) => {
+                                                // Try to get detailed information from NVML
+                                                let name_result = device.name();
+                                                let arch_result = device.architecture();
+                                                let memory_result = device.memory_info();
 
-                        if nv_gpu_count > 0 {
-                            let device = nvml.device_by_index(0)?;
-                            let memory_info = device.memory_info()?;
+                                                match (name_result, arch_result, memory_result) {
+                                                    (Ok(name), Ok(arch), Ok(memory_info)) => {
+                                                        current_gpu_data.name = name;
+                                                        current_gpu_data.architecture = arch.to_string();
+                                                        current_gpu_data.total_memory = memory_info.total;
+                                                        current_gpu_data.free_memory = memory_info.free;
+                                                        current_gpu_data.used_memory = memory_info.used;
+                                                        true // NVML succeeded
+                                                    }
+                                                    _ => false // NVML failed to get device info
+                                                }
+                                            }
+                                            Err(_) => false // Failed to get device
+                                        }
+                                    }
+                                    _ => false // No devices or failed to get count
+                                }
+                            }
+                            Err(_) => false // NVML init failed
+                        };
 
-                            current_gpu_data.name = device.name()?;
-                            current_gpu_data.architecture = device.architecture()?.to_string();
-                            current_gpu_data.total_memory = memory_info.total;
-                            current_gpu_data.free_memory = memory_info.free;
-                            current_gpu_data.used_memory = memory_info.used;
+                        // If NVML failed, fall back to basic information like other vendors
+                        if !nvml_success {
+                            current_gpu_data.name = gpu_name;
+                            current_gpu_data.architecture = "NVIDIA".to_string();
+                            current_gpu_data.total_memory = memory_size as u64;
+                            
+                            // Handle memory budget for fallback
+                            if budget_result.is_ok() {
+                                current_gpu_data.free_memory = memory_budget.availableForReservation;
+                                current_gpu_data.used_memory =
+                                    memory_budget.budget - memory_budget.availableForReservation;
+                            } else {
+                                current_gpu_data.free_memory = 0;
+                                current_gpu_data.used_memory = 0;
+                            }
                         }
                     } else {
                         if hardware_id.vendorID == 0x1002 {

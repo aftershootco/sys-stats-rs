@@ -4,7 +4,7 @@ use sysinfo::{CpuRefreshKind, RefreshKind, System};
 use winapi::um::sysinfoapi::GetSystemInfo;
 use winapi::um::sysinfoapi::SYSTEM_INFO;
 
-use super::CPUArchitecture;
+use super::{CPUArchitecture, CPUVendor};
 
 impl CPUUsage {
     pub fn get_cpu_info() -> Result<CPUData, String> {
@@ -15,6 +15,7 @@ impl CPUUsage {
 
         let mut cpu_data = CPUData {
             name: Self::get_cpu_name(),
+            vendor: Self::get_cpu_vendor(),
             architecture: Self::get_cpu_architecture(),
             num_of_cores: 0,
             average_cpu_usage: 0.0,
@@ -44,6 +45,15 @@ impl CPUUsage {
         } else {
             cpu.unwrap().brand().to_string()
         }
+    }
+
+    fn get_cpu_vendor() -> CPUVendor {
+        let s = System::new_with_specifics(
+            RefreshKind::nothing().with_cpu(CpuRefreshKind::everything()),
+        );
+
+        let vendor_id = s.cpus().get(0).unwrap().vendor_id();
+        CPUVendor::from_vendor_id(vendor_id)
     }
 
     fn get_cpu_architecture() -> CPUArchitecture {
