@@ -17,6 +17,7 @@ windows = { version = "0.62.0", features = [
     "Win32_Graphics_DXCore",
 ] }
 sysinfo = "0.37.0"
+adlx = { git = "https://github.com/Traverse-Research/adlx-rs.git", branch = "main" }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 nvml-wrapper = "0.11.0"

@@ -1,5 +1,7 @@
 use crate::gpu::{AdapterData, DriverVersionData, GPUData, GPUUsage};
 
+use adlx::ffi::{ADLX_GPU_TYPE_GPUTYPE_DISCRETE, ADLX_GPU_TYPE_GPUTYPE_INTEGRATED};
+use adlx::helper::AdlxHelper;
 use anyhow::Result;
 use nvml_wrapper::Nvml;
 use windows::Win32::Graphics::DXCore::*;
@@ -318,7 +320,70 @@ impl GPUUsage {
                             current_gpu_data.architecture = "NVIDIA".to_string();
                             current_gpu_data.total_memory = memory_size as u64;
 
-                            // Handle memory budget for fallback
+                            if budget_result.is_ok() {
+                                current_gpu_data.free_memory =
+                                    memory_budget.availableForReservation;
+                                current_gpu_data.used_memory =
+                                    memory_budget.budget - memory_budget.availableForReservation;
+                            } else {
+                                current_gpu_data.free_memory = 0;
+                                current_gpu_data.used_memory = 0;
+                            }
+                        }
+                    } else if hardware_id.vendorID == 0x1002 {
+                        current_gpu_data.architecture = "Radeon".to_string();
+
+                        let target_gpu_type = if is_integrated {
+                            ADLX_GPU_TYPE_GPUTYPE_INTEGRATED
+                        } else {
+                            ADLX_GPU_TYPE_GPUTYPE_DISCRETE
+                        };
+
+                        let adlx_success = match AdlxHelper::new() {
+                            Ok(adlx_helper) => {
+                                match (
+                                    adlx_helper.system().gpus(),
+                                    adlx_helper.system().performance_monitoring_services(),
+                                ) {
+                                    (Ok(adlx_gpus), Ok(pms)) => {
+                                        let mut found = false;
+                                        for adlx_gpu in adlx_gpus.iter() {
+                                            if adlx_gpu.type_().unwrap_or(0) == target_gpu_type {
+                                                if let (Ok(name), Ok(total_vram)) =
+                                                    (adlx_gpu.name(), adlx_gpu.total_vram())
+                                                {
+                                                    current_gpu_data.name = name.to_string();
+                                                    current_gpu_data.total_memory =
+                                                        total_vram as u64;
+
+                                                    if let Ok(metrics) =
+                                                        pms.current_gpu_metrics(&adlx_gpu)
+                                                    {
+                                                        if let Ok(vram_used) = metrics.vram() {
+                                                            current_gpu_data.used_memory =
+                                                                vram_used as u64;
+                                                            current_gpu_data.free_memory =
+                                                                total_vram as u64
+                                                                    - vram_used as u64;
+                                                        }
+                                                    }
+                                                    found = true;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        found
+                                    }
+                                    _ => false,
+                                }
+                            }
+                            Err(_) => false,
+                        };
+
+                        if !adlx_success {
+                            current_gpu_data.name = gpu_name;
+                            current_gpu_data.total_memory = memory_size as u64;
+
                             if budget_result.is_ok() {
                                 current_gpu_data.free_memory =
                                     memory_budget.availableForReservation;
@@ -330,9 +395,7 @@ impl GPUUsage {
                             }
                         }
                     } else {
-                        if hardware_id.vendorID == 0x1002 {
-                            current_gpu_data.architecture = "Radeon".to_string();
-                        } else if hardware_id.vendorID == 0x8086 {
+                        if hardware_id.vendorID == 0x8086 {
                             current_gpu_data.architecture = "Intel".to_string();
                         } else if hardware_id.vendorID == 0x14E4 {
                             current_gpu_data.architecture = "Qualcomm".to_string();
@@ -341,13 +404,11 @@ impl GPUUsage {
                         current_gpu_data.name = gpu_name;
                         current_gpu_data.total_memory = memory_size as u64;
 
-                        // Handle memory budget for integrated GPUs
                         if budget_result.is_ok() {
                             current_gpu_data.free_memory = memory_budget.availableForReservation;
                             current_gpu_data.used_memory =
                                 memory_budget.budget - memory_budget.availableForReservation;
                         } else {
-                            // For integrated GPUs, use system memory as fallback
                             current_gpu_data.free_memory = 0;
                             current_gpu_data.used_memory = 0;
                         }
