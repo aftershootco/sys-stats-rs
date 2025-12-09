@@ -34,7 +34,6 @@ impl GPUUsage {
                 println!("AMD GPU found");
             } else if gpu.1.contains("Intel") || gpu.1.contains("intel") || gpu.1.contains("INTEL")
             {
-                println!("Intel GPU found");
                 result.name = gpu.1.clone();
             }
         });
