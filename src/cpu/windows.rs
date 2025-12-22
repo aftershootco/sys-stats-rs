@@ -8,27 +8,24 @@ use super::{CPUArchitecture, CPUVendor};
 
 impl CPUUsage {
     pub fn get_cpu_info() -> Result<CPUData, String> {
-        let mut sys_info: SYSTEM_INFO = unsafe { std::mem::zeroed() };
-        unsafe {
-            GetSystemInfo(&mut sys_info);
-        }
-
-        let mut cpu_data = CPUData {
+        Ok(CPUData {
             name: Self::get_cpu_name(),
             vendor: Self::get_cpu_vendor(),
             architecture: Self::get_cpu_architecture(),
-            num_of_cores: 0,
-            average_cpu_usage: 0.0,
-        };
-        cpu_data.num_of_cores = Self::num_of_cores();
-        cpu_data.average_cpu_usage = Self::average_usage();
-        Ok(cpu_data)
+            num_of_cores: Self::num_of_cores(),
+            logical_processors: Self::logical_processors(),
+            average_cpu_usage: Self::average_usage(),
+        })
     }
 
     pub fn num_of_cores() -> u32 {
-        let s =
-            System::new_with_specifics(RefreshKind::nothing().with_cpu(CpuRefreshKind::nothing()));
-        s.cpus().len() as u32
+        sysinfo::System::physical_core_count().unwrap_or(0) as u32
+    }
+
+    pub fn logical_processors() -> u32 {
+        let mut sys = System::new();
+        sys.refresh_cpu_all();
+        sys.cpus().len() as u32
     }
 
     pub fn average_usage() -> f32 {
