@@ -13,14 +13,14 @@ impl CPUUsage {
             GetSystemInfo(&mut sys_info);
         }
 
-        CPUData {
+        Ok(CPUData {
             name: Self::get_cpu_name(),
             vendor: Self::get_cpu_vendor(),
             architecture: Self::get_cpu_architecture(),
             num_of_cores: Self::num_of_cores(),
             average_cpu_usage: Self::average_usage(),
             instruction_sets: Self::get_instruction_sets(),
-        }
+        })
     }
 
     pub fn num_of_cores() -> u32 {
