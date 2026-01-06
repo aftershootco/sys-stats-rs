@@ -1,4 +1,4 @@
-use crate::cpu::{CPUData, CPUUsage};
+use crate::cpu::{CPUData, CPUUsage, CpuFeatureSet};
 use std::process::Command;
 use sysinfo::{CpuRefreshKind, RefreshKind, System};
 
@@ -12,6 +12,7 @@ impl CPUUsage {
             architecture: Self::get_architecture(),
             num_of_cores: Self::num_of_cores(),
             average_cpu_usage: Self::average_usage(),
+            instruction_sets: Self::get_instruction_sets(),
         })
     }
 
@@ -93,5 +94,20 @@ impl CPUUsage {
                 }
             })
             .unwrap_or(CPUArchitecture::Unknown)
+    }
+
+    fn get_instruction_sets() -> Vec<CpuFeatureSet> {
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        {
+            use strum::IntoEnumIterator;
+            CpuFeatureSet::iter()
+                .filter(|f| f.is_supported_x86())
+                .collect()
+        }
+
+        #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
+        {
+            Vec::new()
+        }
     }
 }
