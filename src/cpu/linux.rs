@@ -11,6 +11,7 @@ impl CPUUsage {
             vendor: Self::get_cpu_vendor(),
             architecture: Self::get_architecture(),
             num_of_cores: Self::num_of_cores(),
+            logical_processors: Self::logical_processors(),
             average_cpu_usage: Self::average_usage(),
         })
     }
@@ -35,10 +36,13 @@ impl CPUUsage {
     }
 
     pub fn num_of_cores() -> u32 {
-        match sys_info::cpu_num() {
-            Ok(num) => num,
-            Err(_) => 1, // default to 1 core
-        }
+        sysinfo::System::physical_core_count().unwrap_or(0) as u32
+    }
+
+    pub fn logical_processors() -> u32 {
+        let mut sys = System::new();
+        sys.refresh_cpu_all();
+        sys.cpus().len() as u32
     }
 
     pub fn average_usage() -> f32 {

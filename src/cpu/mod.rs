@@ -17,6 +17,7 @@ pub struct CPUData {
     pub vendor: CPUVendor,
     pub architecture: CPUArchitecture,
     pub num_of_cores: u32,
+    pub logical_processors: u32,
     pub instruction_sets: Vec<CpuFeatureSet>,
     pub average_cpu_usage: f32,
 }
