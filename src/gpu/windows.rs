@@ -1,366 +1,268 @@
 use crate::gpu::{AdapterData, DriverVersionData, GPUData, GPUUsage};
+use anyhow::{Result, anyhow};
+use std::ffi::c_void;
 
-use anyhow::Result;
-use nvml_wrapper::Nvml;
-use windows::Win32::Graphics::DXCore::*;
-
-use windows::Win32::Graphics::DXCore::DXCoreHardwareID;
-use windows::Win32::Graphics::DXCore::DedicatedAdapterMemory;
-use windows::Win32::Graphics::DXCore::DriverDescription;
-use windows::Win32::Graphics::DXCore::DriverVersion;
-use windows::Win32::Graphics::DXCore::IDXCoreAdapter;
-use windows::Win32::Graphics::DXCore::IDXCoreAdapterFactory;
-use windows::Win32::Graphics::DXCore::IDXCoreAdapterList;
-use windows::Win32::Graphics::DXCore::{
-    HardwareID, IsHardware, IsIntegrated, DXCORE_ADAPTER_ATTRIBUTE_D3D12_CORE_COMPUTE,
+use windows::{
+    Win32::{
+        Foundation::*,
+        Graphics::{
+            DXCore::*,
+            Dxgi::{
+                CreateDXGIFactory2, DXGI_ADAPTER_DESC1, DXGI_CREATE_FACTORY_FLAGS,
+                DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IDXGIAdapter1, IDXGIFactory6,
+            },
+        },
+        System::Performance::*,
+    },
+    core::*,
 };
 
-impl GPUUsage {
-    /// Retrieves information about the primary GPU in the system.
-    ///
-    /// # Returns
-    /// * `Ok(GPUData)` - A structure containing information about the GPU, we choose maximum memory gpu if there are multiple GPUs.
-    /// * `Err(Box<dyn std::error::Error>)` - An error if no GPUs are found or if there's an issue retrieving the information.
-    ///
-    /// # Errors
-    /// * Returns an error if no GPU is found in the system.
-    pub fn get_gpu_info() -> Result<GPUData, Box<dyn std::error::Error>> {
-        let gpus = Self::get_gpus_list()?;
-        if gpus.len() == 0 {
-            return Err("No GPU found".to_string().into());
-        }
+fn to_utf16(s: &str) -> Vec<u16> {
+    let mut v: Vec<u16> = s.encode_utf16().collect();
+    v.push(0);
+    v
+}
 
-        Ok(gpus[0].clone())
+fn luid_to_string(luid: LUID) -> String {
+    format!("luid_0x{:08X}_0x{:08X}", luid.HighPart as u32, luid.LowPart)
+}
+
+unsafe fn pdh_read_double(counter: PDH_HCOUNTER) -> f64 {
+    let mut val = PDH_FMT_COUNTERVALUE::default();
+    let mut typ = 0u32;
+    if PdhGetFormattedCounterValue(counter, PDH_FMT_DOUBLE, Some(&mut typ), &mut val)
+        == ERROR_SUCCESS.0
+    {
+        val.Anonymous.doubleValue
+    } else {
+        0.0
+    }
+}
+
+unsafe fn get_gpu_pdh_memory(luid: LUID) -> Option<(u64, u64, u64)> {
+    let instance: String = luid_to_string(luid);
+    let mut query = PDH_HQUERY::default();
+    if PdhOpenQueryW(None, 0, &mut query) != ERROR_SUCCESS.0 {
+        return None;
     }
 
-    /// Get list of all adapters in the system (hardware and non-hardware)
-    pub fn get_all_adapters_list(
-    ) -> std::result::Result<Vec<AdapterData>, Box<dyn std::error::Error>> {
-        let mut adapters_data: Vec<AdapterData> = Vec::new();
+    unsafe fn add_counter(query: PDH_HQUERY, path: &str, counter: &mut PDH_HCOUNTER) -> bool {
+        let utf = to_utf16(path);
+        PdhAddCounterW(query, PCWSTR(utf.as_ptr()), 0, counter) == ERROR_SUCCESS.0
+    }
+
+    let mut c_ded = PDH_HCOUNTER::default();
+    let mut c_sha = PDH_HCOUNTER::default();
+    let mut c_com = PDH_HCOUNTER::default();
+
+    add_counter(
+        query,
+        &format!("\\GPU Adapter Memory({}*)\\Dedicated Usage", instance),
+        &mut c_ded,
+    );
+    add_counter(
+        query,
+        &format!("\\GPU Adapter Memory({}*)\\Shared Usage", instance),
+        &mut c_sha,
+    );
+    add_counter(
+        query,
+        &format!("\\GPU Adapter Memory({}*)\\Total Committed", instance),
+        &mut c_com,
+    );
+
+    PdhCollectQueryData(query);
+    PdhCollectQueryData(query);
+
+    let ded = pdh_read_double(c_ded) as u64;
+    let sha = pdh_read_double(c_sha) as u64;
+    let com = pdh_read_double(c_com) as u64;
+
+    PdhCloseQuery(query);
+
+    Some((ded, sha, com))
+}
+
+fn wide_to_string(buf: &[u16]) -> String {
+    let end = buf.iter().position(|&c| c == 0).unwrap_or(buf.len());
+    String::from_utf16_lossy(&buf[..end])
+}
+
+unsafe fn dxgi_get_adapter_desc(index: u32) -> Option<(IDXGIAdapter1, DXGI_ADAPTER_DESC1)> {
+    let factory: IDXGIFactory6 = CreateDXGIFactory2(DXGI_CREATE_FACTORY_FLAGS(0)).ok()?;
+    let adapter = factory
+        .EnumAdapterByGpuPreference::<IDXGIAdapter1>(index, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE)
+        .ok()?;
+    let desc = adapter.GetDesc1().ok()?;
+    Some((adapter, desc))
+}
+
+unsafe fn enumerate_dxgi_adapters() -> Vec<(LUID, IDXGIAdapter1, DXGI_ADAPTER_DESC1)> {
+    let mut list = Vec::new();
+    let factory: IDXGIFactory6 = CreateDXGIFactory2(DXGI_CREATE_FACTORY_FLAGS(0)).unwrap();
+
+    let mut i = 0u32;
+    loop {
+        match factory
+            .EnumAdapterByGpuPreference::<IDXGIAdapter1>(i, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE)
+        {
+            Ok(adapter) => {
+                if let Ok(desc) = adapter.GetDesc1() {
+                    list.push((desc.AdapterLuid, adapter, desc));
+                } else {
+                    list.push((
+                        LUID {
+                            LowPart: 0,
+                            HighPart: 0,
+                        },
+                        adapter,
+                        DXGI_ADAPTER_DESC1::default(),
+                    ));
+                }
+            }
+            Err(_) => break,
+        }
+        i += 1;
+    }
+    list
+}
+
+unsafe fn get_bool_prop(adapter: &IDXCoreAdapter, prop: DXCoreAdapterProperty) -> bool {
+    let mut buf = [0u8; 4];
+    adapter
+        .GetProperty(prop, 4, buf.as_mut_ptr() as *mut c_void)
+        .is_ok()
+        && u32::from_le_bytes(buf) != 0
+}
+
+fn vendor_to_arch(vendor: u32) -> &'static str {
+    match vendor {
+        0x1002 => "Radeon", 
+        0x10DE => "NVIDIA",
+        0x8086 => "Intel",
+        0x14E4 => "Qualcomm",
+        _ => "Unknown",
+    }
+}
+
+impl GPUUsage {
+    pub fn get_gpu_info() -> Result<GPUData> {
+        Self::get_gpus_list()?
+            .into_iter()
+            .next()
+            .ok_or(anyhow!("No GPU found"))
+    }
+
+    pub fn get_gpus_list() -> Result<Vec<GPUData>> {
+        let mut gpus = Vec::new();
 
         unsafe {
-            let adapter_factory: IDXCoreAdapterFactory = DXCoreCreateAdapterFactory()?;
+            let dxgi_list = enumerate_dxgi_adapters();
 
-            let attributes = [DXCORE_ADAPTER_ATTRIBUTE_D3D12_CORE_COMPUTE];
-            let d3d12_core_compute_adapters: IDXCoreAdapterList =
-                adapter_factory.CreateAdapterList(&attributes)?;
-
-            let count = d3d12_core_compute_adapters.GetAdapterCount();
+            let factory: IDXCoreAdapterFactory = DXCoreCreateAdapterFactory()?;
+            let attrs = [DXCORE_ADAPTER_ATTRIBUTE_D3D12_CORE_COMPUTE];
+            let list: IDXCoreAdapterList = factory.CreateAdapterList(&attrs)?;
+            let count = list.GetAdapterCount();
 
             for i in 0..count {
-                let adapter: IDXCoreAdapter = d3d12_core_compute_adapters.GetAdapter(i)?;
-
-                let mut is_hardware_buffer = [0u8; std::mem::size_of::<u32>()];
-
-                adapter.GetProperty(
-                    IsHardware,
-                    std::mem::size_of::<u32>(),
-                    is_hardware_buffer.as_mut_ptr() as *mut core::ffi::c_void,
-                )?;
-
-                let is_hardware = u32::from_ne_bytes(is_hardware_buffer);
-                let is_hardware = is_hardware != 0;
-
-                // Get the description size
-                let desc_size = adapter.GetPropertySize(DriverDescription)?;
-                let mut desc_buffer = vec![0u8; desc_size];
-
-                adapter.GetProperty(
-                    DriverDescription,
-                    desc_size,
-                    desc_buffer.as_mut_ptr() as *mut core::ffi::c_void,
-                )?;
-
-                let gpu_name = String::from_utf8_lossy(&desc_buffer)
-                    .trim_end_matches('\0')
-                    .to_string();
-
-                // Get driver version
-                let version_size = adapter.GetPropertySize(DriverVersion)?;
-                let mut version_buffer = vec![0u8; version_size];
-
-                adapter.GetProperty(
-                    DriverVersion,
-                    version_size,
-                    version_buffer.as_mut_ptr() as *mut core::ffi::c_void,
-                )?;
-
-                let version = u64::from_ne_bytes(version_buffer.try_into().unwrap());
-
-                // Windows format
-                let major = (version >> 48) & 0xFFFF;
-                let minor = (version >> 32) & 0xFFFF;
-                let build = (version >> 16) & 0xFFFF;
-                let revision = version & 0xFFFF;
-
-                // get hardware id
-                let mut hardware_id_buffer = [0u8; std::mem::size_of::<DXCoreHardwareID>()];
-
-                adapter.GetProperty(
-                    HardwareID,
-                    std::mem::size_of::<DXCoreHardwareID>(),
-                    hardware_id_buffer.as_mut_ptr() as *mut core::ffi::c_void,
-                )?;
-
-                let hardware_id: DXCoreHardwareID =
-                    std::ptr::read(hardware_id_buffer.as_ptr() as *const _);
-
-                let is_integrated = is_integrated_gpu(&adapter)?;
-
-                let mut current_adapter_data = AdapterData::new();
-
-                current_adapter_data.name = gpu_name;
-                current_adapter_data.vendor_id = hardware_id.vendorID;
-                current_adapter_data.device_id = hardware_id.deviceID;
-                current_adapter_data.is_hardware = is_hardware;
-                current_adapter_data.is_integrated = is_integrated;
-                current_adapter_data.adapter_index = i;
-                current_adapter_data.driver_version = DriverVersionData {
-                    major,
-                    minor,
-                    build,
-                    revision,
+                let adapter: IDXCoreAdapter = match list.GetAdapter(i) {
+                    Ok(a) => a,
+                    Err(_) => continue,
                 };
 
-                // Set architecture based on vendor ID
-                if hardware_id.vendorID == 0x10DE {
-                    current_adapter_data.architecture = "NVIDIA".to_string();
-                } else if hardware_id.vendorID == 0x1002 {
-                    current_adapter_data.architecture = "AMD".to_string();
-                } else if hardware_id.vendorID == 0x8086 {
-                    current_adapter_data.architecture = "Intel".to_string();
-                } else if hardware_id.vendorID == 0x14E4 {
-                    current_adapter_data.architecture = "Qualcomm".to_string();
-                } else {
-                    current_adapter_data.architecture = "Unknown".to_string();
+                if !get_bool_prop(&adapter, IsHardware) {
+                    continue;
                 }
 
-                // Get memory info if it's hardware
-                if is_hardware {
-                    let mut memory_size = [0u8; std::mem::size_of::<usize>()];
-                    if let Ok(_) = adapter.GetProperty(
-                        DedicatedAdapterMemory,
-                        std::mem::size_of::<usize>(),
-                        memory_size.as_mut_ptr() as *mut core::ffi::c_void,
-                    ) {
-                        let memory_size = usize::from_ne_bytes(memory_size);
-                        current_adapter_data.total_memory = memory_size as u64;
-                    }
-                }
+                let is_integrated = get_bool_prop(&adapter, IsIntegrated);
 
-                adapters_data.push(current_adapter_data);
-            }
-        }
-
-        Ok(adapters_data)
-    }
-
-    /// Get list of all GPUs in the system, sorted by available memory
-    pub fn get_gpus_list() -> std::result::Result<Vec<GPUData>, Box<dyn std::error::Error>> {
-        let mut gpus_data: Vec<GPUData> = Vec::new();
-
-        unsafe {
-            let adapter_factory: IDXCoreAdapterFactory = DXCoreCreateAdapterFactory()?;
-
-            let attributes = [DXCORE_ADAPTER_ATTRIBUTE_D3D12_CORE_COMPUTE];
-            let d3d12_core_compute_adapters: IDXCoreAdapterList =
-                adapter_factory.CreateAdapterList(&attributes)?;
-
-            let count = d3d12_core_compute_adapters.GetAdapterCount();
-
-            for i in 0..count {
-                let adapter: IDXCoreAdapter = d3d12_core_compute_adapters.GetAdapter(i)?;
-
-                let mut is_hardware_buffer = [0u8; std::mem::size_of::<u32>()];
-
+                // Driver Version
+                let ver_size = adapter.GetPropertySize(DriverVersion)?;
+                let mut ver_buf = vec![0u8; ver_size];
                 adapter.GetProperty(
-                    IsHardware,
-                    std::mem::size_of::<u32>(), // Specify the buffer size explicitly
-                    is_hardware_buffer.as_mut_ptr() as *mut core::ffi::c_void,
+                    DriverVersion,
+                    ver_size,
+                    ver_buf.as_mut_ptr() as *mut c_void,
                 )?;
+                let ver = u64::from_ne_bytes(ver_buf.try_into().unwrap());
+                let driver = DriverVersionData {
+                    major: ((ver >> 48) & 0xFFFF) as u64,
+                    minor: ((ver >> 32) & 0xFFFF) as u64,
+                    build: ((ver >> 16) & 0xFFFF) as u64,
+                    revision: (ver & 0xFFFF) as u64,
+                };
 
-                let is_hardware = u32::from_ne_bytes(is_hardware_buffer);
-                let is_hardware = is_hardware != 0;
+                let mut luid_buf = [0u8; 8];
+                if adapter
+                    .GetProperty(InstanceLuid, 8, luid_buf.as_mut_ptr() as *mut c_void)
+                    .is_err()
+                {
+                    continue;
+                }
 
-                if is_hardware {
-                    // dedicated GPU Memory
-                    let mut memory_size = [0u8; std::mem::size_of::<usize>()];
-                    let memory_size_result = adapter.GetProperty(
-                        DedicatedAdapterMemory,
-                        std::mem::size_of::<usize>(), // Specify the buffer size explicitly
-                        memory_size.as_mut_ptr() as *mut core::ffi::c_void,
-                    );
-                    let memory_size = if memory_size_result.is_ok() {
-                        usize::from_ne_bytes(memory_size)
-                    } else {
-                        0 // Integrated GPUs often have 0 dedicated memory
-                    };
+                let adapter_luid: LUID = std::ptr::read(luid_buf.as_ptr() as *const _);
 
-                    // get AdapterMemoryBudget
-                    let node_segment_group = DXCoreAdapterMemoryBudgetNodeSegmentGroup {
-                        nodeIndex: 0,
-                        segmentGroup: DXCoreSegmentGroup(0),
-                    };
+                // Find matching DXGI adapter by LUID
+                let dxgi_match = dxgi_list.iter().find(|(luid, _dxgi_adapter, _desc)| {
+                    luid.LowPart == adapter_luid.LowPart && luid.HighPart == adapter_luid.HighPart
+                });
 
-                    // Create the memory budget struct to receive the data
-                    let mut memory_budget = DXCoreAdapterMemoryBudget::default();
+                if let Some((dxgi_luid, _dxgi_adapter, dxgi_desc)) = dxgi_match {
+                    let name = wide_to_string(&dxgi_desc.Description);
+                    let vendor = dxgi_desc.VendorId;
 
-                    // Query the state - this might fail for integrated GPUs
-                    let budget_result = adapter.QueryState(
-                        AdapterMemoryBudget,
-                        std::mem::size_of::<DXCoreAdapterMemoryBudgetNodeSegmentGroup>(),
-                        Some(&node_segment_group as *const _ as *const core::ffi::c_void),
-                        std::mem::size_of::<DXCoreAdapterMemoryBudget>(),
-                        &mut memory_budget as *mut _ as *mut core::ffi::c_void,
-                    );
+                    let dedicated_total = dxgi_desc.DedicatedVideoMemory as u64;
+                    let shared_total = dxgi_desc.SharedSystemMemory as u64;
 
-                    let is_integrated = is_integrated_gpu(&adapter)?;
+                    let (ded_used, shared_used, _commit) =
+                        get_gpu_pdh_memory(*dxgi_luid).unwrap_or((0, 0, 0));
 
-                    // get hardware id
-                    let mut hardware_id_buffer = [0u8; std::mem::size_of::<DXCoreHardwareID>()];
+                    let dedicated_free = dedicated_total.saturating_sub(ded_used);
+                    let shared_free = shared_total.saturating_sub(shared_used);
 
-                    adapter.GetProperty(
-                        HardwareID,
-                        std::mem::size_of::<DXCoreHardwareID>(),
-                        hardware_id_buffer.as_mut_ptr() as *mut core::ffi::c_void,
-                    )?;
-                    // Convert the raw buffer to DXCoreHardwareID struct
-                    let hardware_id: DXCoreHardwareID =
-                        std::ptr::read(hardware_id_buffer.as_ptr() as *const _);
+                    let total_memory = if is_integrated {
+                        dedicated_total + shared_total
+                    } else { dedicated_total };
+                    let used_memory = if is_integrated {
+                        ded_used + shared_used
+                    } else { ded_used };
+                    let free_memory = total_memory - used_memory;
 
-                    // Get the description size
-                    let desc_size = adapter.GetPropertySize(DriverDescription)?;
-                    let mut desc_buffer = vec![0u8; desc_size];
+                    gpus.push(GPUData {
+                        name: name.clone(),
+                        architecture: vendor_to_arch(vendor).to_string(),
+                        vendor_id: vendor,
+                        total_memory,
+                        free_memory,
+                        used_memory,
+                        has_unified_memory: is_integrated,
+                        is_integrated,
+                        adapter_index: i,
+                        driver_version: driver,
+                    });
+                } else {
+                    let name: String = format!("DXCore Adapter {}", i);
 
-                    adapter.GetProperty(
-                        DriverDescription,
-                        desc_size,
-                        desc_buffer.as_mut_ptr() as *mut core::ffi::c_void,
-                    )?;
+                    gpus.push(GPUData {
+                        name: name.clone(),
+                        architecture: "Unknown".to_string(),
+                        vendor_id: 0,
+                        total_memory: 0,
+                        free_memory: 0,
+                        used_memory: 0,
+                        has_unified_memory: is_integrated,
+                        is_integrated,
+                        adapter_index: i,
+                        driver_version: driver,
+                    });
 
-                    let gpu_name = String::from_utf8_lossy(&desc_buffer)
-                        .trim_end_matches('\0')
-                        .to_string();
-
-                    // Get driver version
-                    let version_size = adapter.GetPropertySize(DriverVersion)?;
-                    let mut version_buffer = vec![0u8; version_size];
-
-                    adapter.GetProperty(
-                        DriverVersion,
-                        version_size,
-                        version_buffer.as_mut_ptr() as *mut core::ffi::c_void,
-                    )?;
-
-                    let version = u64::from_ne_bytes(version_buffer.try_into().unwrap());
-
-                    // Windows format
-                    let major = (version >> 48) & 0xFFFF;
-                    let minor = (version >> 32) & 0xFFFF;
-                    let build = (version >> 16) & 0xFFFF;
-                    let revision = version & 0xFFFF;
-
-                    let mut current_gpu_data = GPUData::new();
-
-                    current_gpu_data.vendor_id = hardware_id.vendorID;
-                    current_gpu_data.has_unified_memory = is_integrated;
-                    current_gpu_data.is_integrated = is_integrated;
-                    current_gpu_data.adapter_index = i;
-                    current_gpu_data.driver_version = DriverVersionData {
-                        major,
-                        minor,
-                        build,
-                        revision,
-                    };
-
-                    // if nvidia
-                    if hardware_id.vendorID == 0x10DE {
-                        // Try to use NVML for detailed Nvidia GPU information
-                        let nvml_success = match Nvml::init() {
-                            Ok(nvml) => {
-                                match nvml.device_count() {
-                                    Ok(nv_gpu_count) if nv_gpu_count > 0 => {
-                                        match nvml.device_by_index(0) {
-                                            Ok(device) => {
-                                                // Try to get detailed information from NVML
-                                                let name_result = device.name();
-                                                let arch_result = device.architecture();
-                                                let memory_result = device.memory_info();
-
-                                                match (name_result, arch_result, memory_result) {
-                                                    (Ok(name), Ok(arch), Ok(memory_info)) => {
-                                                        current_gpu_data.name = name;
-                                                        current_gpu_data.architecture =
-                                                            arch.to_string();
-                                                        current_gpu_data.total_memory =
-                                                            memory_info.total;
-                                                        current_gpu_data.free_memory =
-                                                            memory_info.free;
-                                                        current_gpu_data.used_memory =
-                                                            memory_info.used;
-                                                        true // NVML succeeded
-                                                    }
-                                                    _ => false, // NVML failed to get device info
-                                                }
-                                            }
-                                            Err(_) => false, // Failed to get device
-                                        }
-                                    }
-                                    _ => false, // No devices or failed to get count
-                                }
-                            }
-                            Err(_) => false, // NVML init failed
-                        };
-
-                        // If NVML failed, fall back to basic information like other vendors
-                        if !nvml_success {
-                            current_gpu_data.name = gpu_name;
-                            current_gpu_data.architecture = "NVIDIA".to_string();
-                            current_gpu_data.total_memory = memory_size as u64;
-
-                            // Handle memory budget for fallback
-                            if budget_result.is_ok() {
-                                current_gpu_data.free_memory =
-                                    memory_budget.availableForReservation;
-                                current_gpu_data.used_memory =
-                                    memory_budget.budget - memory_budget.availableForReservation;
-                            } else {
-                                current_gpu_data.free_memory = 0;
-                                current_gpu_data.used_memory = 0;
-                            }
-                        }
-                    } else {
-                        if hardware_id.vendorID == 0x1002 {
-                            current_gpu_data.architecture = "Radeon".to_string();
-                        } else if hardware_id.vendorID == 0x8086 {
-                            current_gpu_data.architecture = "Intel".to_string();
-                        } else if hardware_id.vendorID == 0x14E4 {
-                            current_gpu_data.architecture = "Qualcomm".to_string();
-                        }
-
-                        current_gpu_data.name = gpu_name;
-                        current_gpu_data.total_memory = memory_size as u64;
-
-                        // Handle memory budget for integrated GPUs
-                        if budget_result.is_ok() {
-                            current_gpu_data.free_memory = memory_budget.availableForReservation;
-                            current_gpu_data.used_memory =
-                                memory_budget.budget - memory_budget.availableForReservation;
-                        } else {
-                            // For integrated GPUs, use system memory as fallback
-                            current_gpu_data.free_memory = 0;
-                            current_gpu_data.used_memory = 0;
-                        }
-                    }
-
-                    // Include all GPUs, even those with 0 memory (integrated GPUs)
-                    gpus_data.push(current_gpu_data);
+                    println!("GPU (adapter_index {}): {} (no DXGI match)", i, name);
                 }
             }
         }
 
         // Sort the GPUs
-        gpus_data.sort_by(|a, b| {
+        gpus.sort_by(|a, b| {
             match (a.is_high_memory_dedicated(), b.is_high_memory_dedicated()) {
                 // If both are high memory dedicated or both are not, keep original order
                 (true, true) | (false, false) => std::cmp::Ordering::Equal,
@@ -371,87 +273,106 @@ impl GPUUsage {
             }
         });
 
-        Ok(gpus_data)
+        Ok(gpus)
     }
 
-    // Get the total gpu memory of the system
-    pub fn total_gpu_memory(adapter_index: u32) -> u64 {
-        Self::get_gpus_list()
-            .map(|gpus| {
-                gpus.iter()
-                    .find(|gpu| gpu.adapter_index == adapter_index)
-                    .map_or(0, |gpu| gpu.total_memory)
-            })
-            .unwrap_or(0)
-    }
+    /// Get list of all adapters in the system (hardware and non-hardware)
+    pub fn get_all_adapters_list() -> Result<Vec<AdapterData>, Box<dyn std::error::Error>> {
+        let mut adapters_list = Vec::new();
 
-    // Get the allocated gpu memory
-    pub fn gpu_memory_usage(adapter_index: u32) -> u64 {
-        Self::get_gpus_list()
-            .map(|gpus| {
-                gpus.iter()
-                    .find(|gpu| gpu.adapter_index == adapter_index)
-                    .map_or(0, |gpu| gpu.used_memory)
-            })
-            .unwrap_or(0)
-    }
+        unsafe {
+            // Enumerate DXGI adapters first
+            let dxgi_list = enumerate_dxgi_adapters();
 
-    pub fn gpu_memory_free(adapter_index: u32) -> u64 {
-        Self::get_gpus_list()
-            .map(|gpus| {
-                gpus.iter()
-                    .find(|gpu| gpu.adapter_index == adapter_index)
-                    .map_or(0, |gpu| gpu.free_memory)
-            })
-            .unwrap_or(0)
-    }
+            let factory: IDXCoreAdapterFactory = DXCoreCreateAdapterFactory()?;
+            let attrs = [DXCORE_ADAPTER_ATTRIBUTE_D3D12_CORE_COMPUTE];
+            let list: IDXCoreAdapterList = factory.CreateAdapterList(&attrs)?;
+            let count = list.GetAdapterCount();
 
-    pub fn has_unified_memory(adapter_index: u32) -> bool {
-        Self::get_gpus_list()
-            .map(|gpus| {
-                gpus.iter()
-                    .find(|gpu| gpu.adapter_index == adapter_index)
-                    .map_or(false, |gpu| gpu.has_unified_memory)
-            })
-            .unwrap_or(false)
-    }
-}
+            for i in 0..count {
+                let adapter: IDXCoreAdapter = match list.GetAdapter(i) {
+                    Ok(a) => a,
+                    Err(_) => continue,
+                };
 
-fn is_integrated_gpu(
-    adapter: &IDXCoreAdapter,
-) -> std::result::Result<bool, Box<dyn std::error::Error>> {
-    let mut integrated_buffer = [0u8; std::mem::size_of::<u32>()];
+                let is_hardware = {
+                    let mut buf = [0u8; 4];
+                    adapter
+                        .GetProperty(IsHardware, 4, buf.as_mut_ptr() as *mut _)
+                        .is_ok()
+                        && u32::from_le_bytes(buf) != 0
+                };
 
-    unsafe {
-        // Check IsIntegrated property
-        if let Ok(_) = adapter.GetProperty(
-            IsIntegrated,
-            std::mem::size_of::<u32>(),
-            integrated_buffer.as_mut_ptr() as *mut core::ffi::c_void,
-        ) {
-            if integrated_buffer != [0, 0, 0, 0] {
-                return Ok(true);
+                let is_integrated = {
+                    let mut buf = [0u8; 4];
+                    adapter
+                        .GetProperty(IsIntegrated, 4, buf.as_mut_ptr() as *mut _)
+                        .is_ok()
+                        && u32::from_le_bytes(buf) != 0
+                };
+
+                let ver_size = adapter.GetPropertySize(DriverVersion)?;
+                let mut ver_buf = vec![0u8; ver_size];
+                adapter.GetProperty(DriverVersion, ver_size, ver_buf.as_mut_ptr() as *mut _)?;
+                let ver = u64::from_ne_bytes(ver_buf.try_into().unwrap());
+
+                let driver_version = DriverVersionData {
+                    major: ((ver >> 48) & 0xFFFF) as u64,
+                    minor: ((ver >> 32) & 0xFFFF) as u64,
+                    build: ((ver >> 16) & 0xFFFF) as u64,
+                    revision: (ver & 0xFFFF) as u64,
+                };
+
+                // Get AdapterLuid for matching
+                let mut luid_buf = [0u8; 8];
+                let adapter_luid = if adapter
+                    .GetProperty(InstanceLuid, 8, luid_buf.as_mut_ptr() as *mut c_void)
+                    .is_ok()
+                {
+                    std::ptr::read(luid_buf.as_ptr() as *const _)
+                } else {
+                    LUID {
+                        LowPart: 0,
+                        HighPart: 0,
+                    }
+                };
+
+                // Try to find DXGI descriptor for richer info
+                let dxgi_match = dxgi_list.iter().find(|(luid, _dxgi_adapter, _desc)| {
+                    luid.LowPart == adapter_luid.LowPart && luid.HighPart == adapter_luid.HighPart
+                });
+
+                let (name, vendor_id, device_id, total_memory, architecture) =
+                    if let Some((_luid, _dxgi_adapter, dxgi_desc)) = dxgi_match {
+                        let name = wide_to_string(&dxgi_desc.Description);
+                        let vendor_id = dxgi_desc.VendorId;
+                        let device_id = dxgi_desc.DeviceId;
+                        let total_memory = dxgi_desc.DedicatedVideoMemory as u64
+                            + if is_integrated {
+                                dxgi_desc.SharedSystemMemory as u64
+                            } else {
+                                0
+                            };
+                        let architecture = vendor_to_arch(vendor_id).to_string();
+                        (name, vendor_id, device_id, total_memory, architecture)
+                    } else {
+                        (format!("Adapter {}", i), 0, 0, 0, "Unknown".to_string())
+                    };
+
+                adapters_list.push(AdapterData {
+                    name,
+                    vendor_id,
+                    device_id,
+                    is_hardware,
+                    is_integrated,
+                    adapter_index: i,
+                    driver_version,
+                    total_memory,
+                    architecture,
+                });
             }
         }
 
-        // Get the description size
-        let desc_size = adapter.GetPropertySize(DriverDescription)?;
-        let mut desc_buffer = vec![0u8; desc_size];
-
-        adapter.GetProperty(
-            DriverDescription,
-            desc_size,
-            desc_buffer.as_mut_ptr() as *mut core::ffi::c_void,
-        )?;
-
-        let gpu_name = String::from_utf8_lossy(&desc_buffer)
-            .trim_end_matches('\0')
-            .to_string();
-
-        // Check common integrated GPU patterns
-        return Ok(gpu_name.contains("amd radeon(tm) graphics")
-            || gpu_name.contains("AMD Radeon(TM) Graphics")
-            || gpu_name.contains("ryzen")
-            || gpu_name.contains("uhd graphics"));
+        Ok(adapters_list)
     }
 }
