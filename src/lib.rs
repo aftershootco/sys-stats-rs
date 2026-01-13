@@ -7,6 +7,7 @@ mod soc;
 
 pub use crate::cpu::CPUUsage as CPUStats;
 pub use crate::cpu::CPUVendor;
+pub use crate::cpu::CpuFeatureSet;
 pub use crate::gpu::GPUData;
 pub use crate::gpu::GPUUsage as GPUStats;
 pub use crate::memory::MemoryUsage as MemoryStats;

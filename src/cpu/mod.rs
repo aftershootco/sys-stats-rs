@@ -17,11 +17,12 @@ pub struct CPUData {
     pub vendor: CPUVendor,
     pub architecture: CPUArchitecture,
     pub num_of_cores: u32,
+    pub logical_processors: u32,
     pub instruction_sets: Vec<CpuFeatureSet>,
     pub average_cpu_usage: f32,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, EnumIter)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, EnumIter)]
 #[serde(rename_all = "lowercase")]
 #[strum(serialize_all = "lowercase")]
 pub enum CpuFeatureSet {
