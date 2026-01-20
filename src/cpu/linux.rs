@@ -12,6 +12,7 @@ impl CPUUsage {
             architecture: Self::get_architecture(),
             num_of_cores: Self::num_of_cores(),
             logical_processors: Self::logical_processors(),
+            instruction_sets: Self::get_instruction_sets(),
             average_cpu_usage: Self::average_usage(),
         })
     }
