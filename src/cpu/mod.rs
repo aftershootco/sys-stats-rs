@@ -115,7 +115,7 @@ impl CpuFeatureSet {
     }
 }
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum CPUVendor {
     Intel,
     AMD,
