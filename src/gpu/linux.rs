@@ -25,7 +25,7 @@ impl GPUUsage {
             },
         };
 
-        let gpus: Vec<(String, String)> = dbg!(Self::get_gpu_from_lspci());
+        let gpus: Vec<(String, String)> = Self::get_gpu_from_lspci();
 
         gpus.iter().for_each(|gpu| {
             if gpu.1.contains("NVIDIA") || gpu.1.contains("nvidia") || gpu.1.contains("Nvidia") {
